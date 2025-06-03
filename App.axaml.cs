@@ -34,6 +34,7 @@ public partial class App : Application
             {
                 DataContext = AppState
             };
+            AppState.MainWindow = desktop.MainWindow;
         }
 
         base.OnFrameworkInitializationCompleted();

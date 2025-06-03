@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using wow_addon_backuper;
 
 namespace Dropbox;
 
@@ -106,7 +107,7 @@ class OAuthHandler
         token.ExpiresAt = DateTimeOffset.Now.ToUnixTimeSeconds() + response.ExpiresIn;
     }
 
-    private async Task WriteUserDataToFile(BearerToken token)
+    private static async Task WriteUserDataToFile(BearerToken token)
     {
         if (string.IsNullOrEmpty(token.RefreshToken) || string.IsNullOrEmpty(token.AccountId))
         {
@@ -115,45 +116,16 @@ class OAuthHandler
         }
         Console.WriteLine("Writing refresh token to file");
 
-        var dir = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/wow-addon-backuper";
-        Directory.CreateDirectory(dir);
-        var file = $"{dir}/user.data";
-        using (var fs = File.OpenWrite(file))
-        {
-            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> { { "RefreshToken", token.RefreshToken }, { "AccountId", token.AccountId } }, KeyValueJsonContext.Default.KeyValueDict);
-            await fs.WriteAsync(bytes);
-        }
+        await Util.WriteToFile("user.data", JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> { { "RefreshToken", token.RefreshToken }, { "AccountId", token.AccountId } }, KeyValueJsonContext.Default.KeyValueDict));
     }
 
-    private async Task ReadUserDataFromFile(BearerToken token)
+    private static async Task ReadUserDataFromFile(BearerToken token)
     {
-        var dir = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/wow-addon-backuper";
-        var file = $"{dir}/user.data";
-        if (!File.Exists(file)) return;
-
-        var finfo = new FileInfo(file);
-        byte[] buffer = new byte[finfo.Length];
-        using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read, buffer.Length, true))
-        {
-            while (true)
-            {
-                if ((await fs.ReadAsync(buffer)) <= 0)
-                    break;
-            }
-            var kv = JsonSerializer.Deserialize(buffer, KeyValueJsonContext.Default.KeyValueDict);
-            if (kv == null) return;
-            token.RefreshToken = kv["RefreshToken"];
-            token.AccountId = kv["AccountId"];
-        }
-    }
-
-    private static void DeleteUserDataFile()
-    {
-        var dir = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/wow-addon-backuper";
-        var file = $"{dir}/user.data";
-        if (!File.Exists(file)) return;
-
-        File.Delete(file);
+        var buffer = await Util.ReadFromFile("user.data");
+        var kv = JsonSerializer.Deserialize(buffer, KeyValueJsonContext.Default.KeyValueDict);
+        if (kv == null) return;
+        token.RefreshToken = kv["RefreshToken"];
+        token.AccountId = kv["AccountId"];
     }
 
     public async Task SignIn(BearerToken token)
@@ -198,7 +170,7 @@ class OAuthHandler
 
     public void SignOut()
     {
-        DeleteUserDataFile();
+        Util.DeleteFile("user.data");
     }
 
     public async Task RefreshToken(BearerToken token)

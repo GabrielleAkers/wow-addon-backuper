@@ -1,9 +1,13 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
+using CommunityToolkit.Mvvm.Input;
 
 namespace wow_addon_backuper;
 
@@ -52,26 +56,14 @@ public partial class MainWindow : Window
         });
     }
 
-    private bool _isWindowDragInEffect = false;
-    private Point _cursorPositionAtWindowDragStart = new(0, 0);
-
-    private void OnPointerMoved(object? sender, PointerEventArgs e)
-    {
-        if (_isWindowDragInEffect)
-        {
-            Point currentCursorPosition = e.GetPosition(this);
-            Point cursorPositionDelta = currentCursorPosition - _cursorPositionAtWindowDragStart;
-
-            Position = this.PointToScreen(cursorPositionDelta);
-        }
-    }
-
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        _isWindowDragInEffect = true;
-        _cursorPositionAtWindowDragStart = e.GetPosition(this);
-    }
+        var control = this.InputHitTest(e.GetPosition(this));
 
-    private void OnPointerReleased(object? sender, PointerReleasedEventArgs e) =>
-        _isWindowDragInEffect = false;
+        // fix combobox with drag
+        if (control is not null && control is not LightDismissOverlayLayer)
+        {
+            BeginMoveDrag(e);
+        }
+    }
 }

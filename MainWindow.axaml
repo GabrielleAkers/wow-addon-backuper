@@ -17,9 +17,8 @@
     ExtendClientAreaChromeHints="NoChrome"
     ExtendClientAreaTitleBarHeightHint="-1"
     ExtendClientAreaToDecorationsHint="True"
-    PointerMoved="OnPointerMoved"
+    Focusable="True"
     PointerPressed="OnPointerPressed"
-    PointerReleased="OnPointerReleased"
     SystemDecorations="None"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
@@ -31,7 +30,7 @@
                 BoxShadow="0 0 10 0 Black"
                 CornerRadius="20"
                 DockPanel.Dock="Top">
-                <DockPanel Margin="-2" VerticalAlignment="Center">
+                <DockPanel Margin="-1" VerticalAlignment="Center">
                     <Button
                         Padding="24,8,24,8"
                         HorizontalAlignment="Center"
@@ -43,7 +42,7 @@
                         IsVisible="{Binding DropboxToken.AccountId, Converter={x:Static StringConverters.IsNullOrEmpty}}">
                         <Button.Styles>
                             <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#8E3BDB" />
+                                <Setter Property="Background" Value="#A65FE8" />
                             </Style>
                             <Style Selector="Button:pressed /template/ ContentPresenter">
                                 <Setter Property="Background" Value="#53178A" />
@@ -61,7 +60,7 @@
                         IsVisible="{Binding DropboxToken.AccountId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                         <Button.Styles>
                             <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#8E3BDB" />
+                                <Setter Property="Background" Value="#A65FE8" />
                             </Style>
                             <Style Selector="Button:pressed /template/ ContentPresenter">
                                 <Setter Property="Background" Value="#53178A" />
@@ -76,7 +75,7 @@
                         Text="{Binding UserAccountInfo.Name.DisplayName, FallbackValue=Not signed in, StringFormat='Signed in as {0}'}"
                         TextAlignment="Center" />
                     <StackPanel
-                        Margin="6,0,0,0"
+                        Margin="0,0,6,0"
                         Background="Transparent"
                         DockPanel.Dock="Right"
                         FlowDirection="RightToLeft"
@@ -84,14 +83,14 @@
                         Spacing="6">
                         <Button
                             Name="CloseButton"
-                            Width="34"
-                            Height="34"
+                            Width="24"
+                            Height="24"
                             Padding="6"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
                             BorderThickness="0"
                             Click="CloseWindow"
-                            CornerRadius="17"
+                            CornerRadius="12"
                             ToolTip.Tip="Close window">
                             <Button.Styles>
                                 <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
@@ -161,10 +160,10 @@
                             ToolTip.Tip="Minimize window">
                             <Button.Styles>
                                 <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="#FFFF73" />
+                                    <Setter Property="Background" Value="#FFFFA3" />
                                 </Style>
                                 <Style Selector="Button:not(:pointerover) /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Background" Value="Yellow" />
+                                    <Setter Property="Background" Value="#E3E31B" />
                                 </Style>
                                 <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
                                     <Setter Property="Background" Value="#878700" />
@@ -186,11 +185,52 @@
                 Width="200"
                 MaxWidth="200"
                 Margin="4"
+                Padding="0"
                 Background="#F5A9B8"
                 BorderThickness="2"
                 BoxShadow="0 0 10 0 Black"
                 CornerRadius="20"
-                DockPanel.Dock="Left" />
+                DockPanel.Dock="Left">
+                <DockPanel>
+                    <StackPanel
+                        Margin="-2"
+                        DockPanel.Dock="Bottom"
+                        Orientation="Horizontal"
+                        Spacing="0">
+                        <Button
+                            Width="32"
+                            Height="32"
+                            Margin="0,0,-1,0"
+                            Command="{Binding PickWowDirCommand}"
+                            Content="P"
+                            CornerRadius="0 0 0 20"
+                            ToolTip.Tip="Open folder picker" />
+                        <TextBox
+                            Name="WowInstallDirTextbox"
+                            Width="168"
+                            Height="30"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            AcceptsReturn="False"
+                            BorderBrush="Black"
+                            CornerRadius="0 0 20 0"
+                            Text="{Binding WowInstallDir.Value, UpdateSourceTrigger=LostFocus}"
+                            TextAlignment="Center"
+                            TextWrapping="NoWrap"
+                            Watermark="WoW install directory" />
+                    </StackPanel>
+                    <ComboBox
+                        Name="GameVersionsComboBox"
+                        Margin="-2"
+                        HorizontalAlignment="Stretch"
+                        BorderBrush="Black"
+                        CornerRadius="20 20 0 0"
+                        DockPanel.Dock="Top"
+                        ItemsSource="{Binding InstalledGameVersions}"
+                        SelectedIndex="{Binding SelectedGameVersionIndex}" />
+                    <Rectangle />
+                </DockPanel>
+            </Border>
             <Border
                 Name="MainContentPanel"
                 Margin="4"
