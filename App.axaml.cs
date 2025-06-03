@@ -8,8 +8,8 @@ namespace wow_addon_backuper;
 
 public partial class App : Application
 {
-    public static AppState AppState { get; } = new(new Dropbox.BearerToken());
-    public static Dropbox.ApiClient Api { get; } = new(AppState.Token);
+    public static MainViewModel AppState { get; } = new(new Dropbox.BearerToken());
+    public static Dropbox.ApiClient DropboxApi { get; } = new(AppState.DropboxToken);
 
     public override void Initialize()
     {
@@ -20,10 +20,10 @@ public partial class App : Application
     {
         static async Task RefreshAndFetchAccount()
         {
-            await Dropbox.OAuthHandler.Instance().RefreshToken(AppState.Token);
-            if (!string.IsNullOrEmpty(AppState.Token.AccountId))
+            await Dropbox.OAuthHandler.Instance().RefreshToken(AppState.DropboxToken);
+            if (!string.IsNullOrEmpty(AppState.DropboxToken.AccountId))
             {
-                AppState.UserAccountInfo = await Api.GetAccount();
+                AppState.UserAccountInfo = await DropboxApi.GetAccount();
             }
         }
         Task.Run(RefreshAndFetchAccount);
@@ -32,7 +32,7 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = AppState,
+                DataContext = AppState
             };
         }
 

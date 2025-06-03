@@ -14,16 +14,16 @@ public class ApiClient(BearerToken token)
     private readonly static string _api_base_url = "https://api.dropboxapi.com/2";
     private readonly BearerToken _token = token;
 
-    private async Task<HttpRequestMessage> MakePost(string url, bool use_auth, HttpContent? content, string content_type)
+    private async Task<HttpRequestMessage> MakePost(string url, bool use_auth, HttpContent? content, string? content_type)
     {
         var req = new HttpRequestMessage(HttpMethod.Post, url);
         if (use_auth)
         {
-            if (OAuthHandler.Instance().AccessTokenExpireTimeDiff() < 60)
+            if (_token.AccessTokenExpireTimeDiff() < 60)
                 await OAuthHandler.Instance().RefreshToken(_token);
-            req.Headers.Add("Authorization", $"Bearer {OAuthHandler.Instance().BearerToken.AccessToken}");
+            req.Headers.Add("Authorization", $"Bearer {_token.AccessToken}");
         }
-        if (content != null)
+        if (content != null && !string.IsNullOrEmpty(content_type))
         {
             req.Content = content;
             req.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(content_type);
@@ -55,5 +55,16 @@ public class ApiClient(BearerToken token)
 
         var content = await res.Content.ReadFromJsonAsync(ApiDataJsonContext.Default.UserAccountInfo);
         return content;
+    }
+
+    public async Task RevokeToken()
+    {
+        var req = await MakePost(
+            $"{_api_base_url}/auth/token/revoke",
+            true,
+            null,
+            null
+        );
+        await Http.client.SendAsync(req);
     }
 }

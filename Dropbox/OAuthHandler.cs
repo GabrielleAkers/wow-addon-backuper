@@ -37,7 +37,6 @@ class OAuthHandler
 
     private string? _code_verifier;
     private string? _state;
-    public BearerToken BearerToken { get; private set; }
 
     private void GenerateCodeVerifier()
     {
@@ -83,33 +82,33 @@ class OAuthHandler
         Process.Start(new ProcessStartInfo($"{_base_url}/oauth2/authorize?client_id={_client_id}&redirect_uri={redirect_uri}&response_type={response_type}&code_challenge={challenge_code}&code_challenge_method={code_challenge_method}&token_access_type={token_access_type}&state={_state}") { UseShellExecute = true });
     }
 
-    private async Task AccessTokenRequest(string auth_code, string redirect_uri)
+    private async Task AccessTokenRequest(BearerToken token, string auth_code, string redirect_uri)
     {
         Console.WriteLine("Requesting new access token");
         var post_res = await Http.client.PostAsync($"{_api_base_url}/oauth2/token?client_id={_client_id}&redirect_uri={redirect_uri}&code_verifier={_code_verifier}&grant_type=authorization_code&code={auth_code}", null);
         if (!post_res.IsSuccessStatusCode) throw new Exception(post_res.ReasonPhrase);
 
         var response = await post_res.Content.ReadFromJsonAsync(TokenResponseJsonContext.Default.AuthTokenResponse) ?? throw new Exception("Failed to fetch bearer token");
-        BearerToken.AccessToken = response.AccessToken;
-        BearerToken.ExpiresAt = DateTimeOffset.Now.ToUnixTimeSeconds() + response.ExpiresIn;
-        BearerToken.RefreshToken = response.RefreshToken;
-        BearerToken.AccountId = response.AccountId;
+        token.AccessToken = response.AccessToken;
+        token.ExpiresAt = DateTimeOffset.Now.ToUnixTimeSeconds() + response.ExpiresIn;
+        token.RefreshToken = response.RefreshToken;
+        token.AccountId = response.AccountId;
     }
 
-    private async Task RefreshTokenRequest()
+    private async Task RefreshTokenRequest(BearerToken token)
     {
         Console.WriteLine("Refreshing token");
-        var post_res = await Http.client.PostAsync($"{_api_base_url}/oauth2/token?client_id={_client_id}&refresh_token={BearerToken.RefreshToken}&grant_type=refresh_token", null);
+        var post_res = await Http.client.PostAsync($"{_api_base_url}/oauth2/token?client_id={_client_id}&refresh_token={token.RefreshToken}&grant_type=refresh_token", null);
         if (!post_res.IsSuccessStatusCode) throw new Exception(post_res.ReasonPhrase);
 
         var response = await post_res.Content.ReadFromJsonAsync(TokenResponseJsonContext.Default.RefreshTokenResponse) ?? throw new Exception("Failed to refresh token");
-        BearerToken.AccessToken = response.AccessToken!;
-        BearerToken.ExpiresAt = DateTimeOffset.Now.ToUnixTimeSeconds() + response.ExpiresIn;
+        token.AccessToken = response.AccessToken!;
+        token.ExpiresAt = DateTimeOffset.Now.ToUnixTimeSeconds() + response.ExpiresIn;
     }
 
-    private async Task WriteRefreshTokenToFile()
+    private async Task WriteUserDataToFile(BearerToken token)
     {
-        if (string.IsNullOrEmpty(BearerToken.RefreshToken) || string.IsNullOrEmpty(BearerToken.AccountId))
+        if (string.IsNullOrEmpty(token.RefreshToken) || string.IsNullOrEmpty(token.AccountId))
         {
             Console.WriteLine("No refresh token/account id");
             return;
@@ -121,12 +120,12 @@ class OAuthHandler
         var file = $"{dir}/user.data";
         using (var fs = File.OpenWrite(file))
         {
-            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> { { "RefreshToken", BearerToken.RefreshToken }, { "AccountId", BearerToken.AccountId } }, KeyValueJsonContext.Default.KeyValueDict);
+            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> { { "RefreshToken", token.RefreshToken }, { "AccountId", token.AccountId } }, KeyValueJsonContext.Default.KeyValueDict);
             await fs.WriteAsync(bytes);
         }
     }
 
-    private async Task ReadRefreshTokenFromFile()
+    private async Task ReadUserDataFromFile(BearerToken token)
     {
         var dir = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/wow-addon-backuper";
         var file = $"{dir}/user.data";
@@ -143,14 +142,22 @@ class OAuthHandler
             }
             var kv = JsonSerializer.Deserialize(buffer, KeyValueJsonContext.Default.KeyValueDict);
             if (kv == null) return;
-            BearerToken.RefreshToken = kv["RefreshToken"];
-            BearerToken.AccountId = kv["AccountId"];
+            token.RefreshToken = kv["RefreshToken"];
+            token.AccountId = kv["AccountId"];
         }
     }
 
-    public async Task SignIn(BearerToken bearer)
+    private static void DeleteUserDataFile()
     {
-        BearerToken = bearer;
+        var dir = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/wow-addon-backuper";
+        var file = $"{dir}/user.data";
+        if (!File.Exists(file)) return;
+
+        File.Delete(file);
+    }
+
+    public async Task SignIn(BearerToken token)
+    {
         int port = 41685;
         string redirect_uri = $"http://localhost:{port}/";
         var http = new HttpListener();
@@ -178,9 +185,9 @@ class OAuthHandler
             await response_output.WriteAsync(buffer);
             response_output.Close();
 
-            await AccessTokenRequest(result.Code!, redirect_uri);
-            Console.WriteLine($"Successfully signed in as account {BearerToken.AccountId}");
-            await WriteRefreshTokenToFile();
+            await AccessTokenRequest(token, result.Code!, redirect_uri);
+            Console.WriteLine($"Successfully signed in as account {token.AccountId}");
+            await WriteUserDataToFile(token);
         }
         finally
         {
@@ -189,26 +196,26 @@ class OAuthHandler
         }
     }
 
-    public async Task RefreshToken(BearerToken bearer)
+    public void SignOut()
     {
-        BearerToken = bearer;
-        if (string.IsNullOrEmpty(BearerToken.RefreshToken))
+        DeleteUserDataFile();
+    }
+
+    public async Task RefreshToken(BearerToken token)
+    {
+        if (string.IsNullOrEmpty(token.RefreshToken))
         {
-            await Task.Run(ReadRefreshTokenFromFile);
+            async Task t() => await ReadUserDataFromFile(token);
+            await Task.Run(t);
         }
-        if (string.IsNullOrEmpty(BearerToken.RefreshToken))
+        if (string.IsNullOrEmpty(token.RefreshToken))
         {
             Console.WriteLine("No refresh token in file or memory");
             return;
         }
 
         Console.WriteLine("Refreshing token");
-        await RefreshTokenRequest();
-        await WriteRefreshTokenToFile();
-    }
-
-    public long AccessTokenExpireTimeDiff()
-    {
-        return BearerToken.ExpiresAt - DateTimeOffset.Now.ToUnixTimeSeconds();
+        await RefreshTokenRequest(token);
+        await WriteUserDataToFile(token);
     }
 }

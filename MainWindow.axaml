@@ -5,22 +5,196 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:wow_addon_backuper"
-    Title="wow_addon_backuper"
-    d:DesignHeight="450"
+    Title="WoW Addon Backuper"
+    Width="800"
+    Height="600"
+    Padding="{Binding $self.OffScreenMargin}"
+    d:DataContext="{x:Static vm:MainViewModel}"
+    d:DesignHeight="600"
     d:DesignWidth="800"
-    x:DataType="vm:AppState"
+    x:DataType="vm:MainViewModel"
+    ExtendClientAreaChromeHints="NoChrome"
+    ExtendClientAreaTitleBarHeightHint="-1"
+    ExtendClientAreaToDecorationsHint="True"
+    PointerMoved="OnPointerMoved"
+    PointerPressed="OnPointerPressed"
+    PointerReleased="OnPointerReleased"
+    SystemDecorations="None"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
-    <StackPanel
-        Margin="50"
-        HorizontalAlignment="Center"
-        VerticalAlignment="Center"
-        Spacing="25">
-        <TextBlock Text="{Binding UserAccountInfo.Name.DisplayName, FallbackValue=Hello, StringFormat='Hello {0}'}" TextAlignment="Center" />
-        <Button
-            Click="DropBoxSignIn_OnClick"
-            IsEnabled="{Binding Token.AccountId, Converter={x:Static StringConverters.IsNullOrEmpty}}"
-            IsVisible="{Binding Token.AccountId, Converter={x:Static StringConverters.IsNullOrEmpty}}">
-            Login to DropBox
-        </Button>
-    </StackPanel>
+    <Border Background="{DynamicResource SystemRegionColor}" CornerRadius="20">
+        <DockPanel>
+            <Border
+                Margin="4"
+                Background="#F5A9B8"
+                BoxShadow="0 0 10 0 #ffffafcc"
+                CornerRadius="20"
+                DockPanel.Dock="Top">
+                <DockPanel Margin="-2" VerticalAlignment="Center">
+                    <Button
+                        Padding="24,8,24,8"
+                        HorizontalAlignment="Center"
+                        Background="BlueViolet"
+                        Command="{Binding DropboxSigninCommand}"
+                        Content="Signin"
+                        CornerRadius="20"
+                        IsEnabled="{Binding DropboxToken.AccountId, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                        IsVisible="{Binding DropboxToken.AccountId, Converter={x:Static StringConverters.IsNullOrEmpty}}">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#8E3BDB" />
+                            </Style>
+                            <Style Selector="Button:pressed /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#53178A" />
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+                    <Button
+                        Padding="24,8,24,8"
+                        HorizontalAlignment="Center"
+                        Background="BlueViolet"
+                        Command="{Binding DropboxSignoutCommand}"
+                        Content="Signout"
+                        CornerRadius="20"
+                        IsEnabled="{Binding DropboxToken.AccountId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        IsVisible="{Binding DropboxToken.AccountId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#8E3BDB" />
+                            </Style>
+                            <Style Selector="Button:pressed /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#53178A" />
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+                    <TextBlock
+                        Margin="25,0,25,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding UserAccountInfo.Name.DisplayName, FallbackValue=Not signed in, StringFormat='Signed in as {0}'}"
+                        TextAlignment="Center" />
+                    <StackPanel
+                        Margin="6,0,0,0"
+                        Background="Transparent"
+                        DockPanel.Dock="Right"
+                        FlowDirection="RightToLeft"
+                        Orientation="Horizontal"
+                        Spacing="6">
+                        <Button
+                            Name="CloseButton"
+                            Width="34"
+                            Height="34"
+                            Padding="6"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            BorderThickness="0"
+                            Click="CloseWindow"
+                            CornerRadius="17"
+                            ToolTip.Tip="Close window">
+                            <Button.Styles>
+                                <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Background" Value="#F76F6F" />
+                                </Style>
+                                <Style Selector="Button:not(:pointerover) /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Background" Value="Red" />
+                                </Style>
+                                <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Background" Value="#6E0101" />
+                                </Style>
+                                <Style Selector="Button:pointerover &gt; Path">
+                                    <Setter Property="Fill" Value="White" />
+                                </Style>
+                                <Style Selector="Button:not(:pointerover) &gt; Path">
+                                    <Setter Property="Fill" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                                </Style>
+                            </Button.Styles>
+                            <Path
+                                Width="12"
+                                Height="12"
+                                Margin="6,0,6,0"
+                                Data="M1169 1024l879 -879l-145 -145l-879 879l-879 -879l-145 145l879 879l-879 879l145 145l879 -879l879 879l145 -145z"
+                                Stretch="Uniform" />
+                        </Button>
+                        <Button
+                            Name="MaximizeButton"
+                            Width="24"
+                            Height="24"
+                            VerticalAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Click="MaximizeWindow"
+                            CornerRadius="12">
+                            <ToolTip.Tip>
+                                <ToolTip Name="MaximizeTooltip" Content="Maximize window" />
+                            </ToolTip.Tip>
+                            <Button.Styles>
+                                <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Background" Value="#B9FF66" />
+                                </Style>
+                                <Style Selector="Button:not(:pointerover) /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Background" Value="LimeGreen" />
+                                </Style>
+                                <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Background" Value="#3E6E05" />
+                                </Style>
+                            </Button.Styles>
+
+                            <Path
+                                Name="MaximizeIcon"
+                                Width="12"
+                                Height="12"
+                                Data="M 0,12 l 9,0 l -9,-9 l 0,9 M 12,0 l 0,9 l -9,-9 l 9,0"
+                                Fill="#0A630C"
+                                StrokeThickness="0" />
+                        </Button>
+                        <Button
+                            Name="MinimizeButton"
+                            Width="24"
+                            Height="24"
+                            VerticalAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Click="MinimizeWindow"
+                            CornerRadius="12"
+                            ToolTip.Tip="Minimize window">
+                            <Button.Styles>
+                                <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Background" Value="#FFFF73" />
+                                </Style>
+                                <Style Selector="Button:not(:pointerover) /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Background" Value="Yellow" />
+                                </Style>
+                                <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Background" Value="#878700" />
+                                </Style>
+                            </Button.Styles>
+
+                            <Path
+                                Width="16"
+                                Height="1"
+                                Data="M 0,0 l 16,0"
+                                Stroke="#985712"
+                                StrokeThickness="1" />
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Border
+                Name="LeftPanel"
+                Width="200"
+                MaxWidth="200"
+                Margin="4"
+                Background="#F5A9B8"
+                BorderThickness="2"
+                BoxShadow="0 0 10 0 #ffffafcc"
+                CornerRadius="20"
+                DockPanel.Dock="Left" />
+            <Border
+                Name="MainContentPanel"
+                Margin="4"
+                Background="#F5A9B8"
+                BorderThickness="2"
+                BoxShadow="0 0 10 0 #ffffafcc"
+                CornerRadius="20" />
+        </DockPanel>
+    </Border>
 </Window>

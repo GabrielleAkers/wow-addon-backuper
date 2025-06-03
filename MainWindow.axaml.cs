@@ -1,5 +1,9 @@
+using System;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 
 namespace wow_addon_backuper;
 
@@ -10,16 +14,64 @@ public partial class MainWindow : Window
         InitializeComponent();
         // fix unhandled TaskCanceledException
         Closing += Util.OnWindowClosing;
+        SubscribeToWindowState();
     }
 
-    private static async void DropBoxSignIn_OnClick(object? sender, RoutedEventArgs e)
+    private void CloseWindow(object? sender, RoutedEventArgs e)
     {
-        await Dropbox.OAuthHandler.Instance().SignIn(App.AppState.Token);
-        App.AppState.UserAccountInfo = await App.Api.GetAccount();
+        Close();
     }
 
-    private static async void DropBoxCheck_OnClick(object? sender, RoutedEventArgs e)
+    private void MaximizeWindow(object? sender, RoutedEventArgs e)
     {
-        await App.Api.CheckUser();
+        if (WindowState == WindowState.Normal)
+            WindowState = WindowState.Maximized;
+        else
+            WindowState = WindowState.Normal;
     }
+
+    private void MinimizeWindow(object? sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void SubscribeToWindowState()
+    {
+        ExtendClientAreaTitleBarHeightHint = 44;
+        this.GetObservable(WindowStateProperty).Subscribe(s =>
+        {
+            Padding = OffScreenMargin;
+            if (s != WindowState.Maximized)
+            {
+                MaximizeTooltip.Content = "Maximize window";
+            }
+            if (s == WindowState.Maximized)
+            {
+                MaximizeTooltip.Content = "Restore down";
+            }
+        });
+    }
+
+    private bool _isWindowDragInEffect = false;
+    private Point _cursorPositionAtWindowDragStart = new(0, 0);
+
+    private void OnPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_isWindowDragInEffect)
+        {
+            Point currentCursorPosition = e.GetPosition(this);
+            Point cursorPositionDelta = currentCursorPosition - _cursorPositionAtWindowDragStart;
+
+            Position = this.PointToScreen(cursorPositionDelta);
+        }
+    }
+
+    private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _isWindowDragInEffect = true;
+        _cursorPositionAtWindowDragStart = e.GetPosition(this);
+    }
+
+    private void OnPointerReleased(object? sender, PointerReleasedEventArgs e) =>
+        _isWindowDragInEffect = false;
 }

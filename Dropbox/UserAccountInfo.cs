@@ -24,12 +24,10 @@ public partial class AccountName : ObservableObject
     [ObservableProperty]
     [JsonPropertyName("surname")]
     public partial string? Surname { get; set; }
-
 }
 
 public partial class UserAccountInfo : ObservableObject
 {
-
     [ObservableProperty]
     [JsonPropertyName("name")]
     public partial AccountName? Name { get; set; }
