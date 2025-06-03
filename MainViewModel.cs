@@ -11,7 +11,7 @@ public partial class MainViewModel(Dropbox.BearerToken token) : ObservableObject
     private Dropbox.BearerToken _dropboxToken = token;
 
     [ObservableProperty]
-    private Dropbox.UserAccountInfo? _userAccountInfo;
+    private Dropbox.Responses.UserAccountInfo? _userAccountInfo;
 
     [RelayCommand]
     public static async Task DropboxSignin()
@@ -27,5 +27,23 @@ public partial class MainViewModel(Dropbox.BearerToken token) : ObservableObject
         Dropbox.OAuthHandler.Instance().SignOut();
         App.AppState.DropboxToken.Clear();
         App.AppState.UserAccountInfo = null;
+    }
+
+    [RelayCommand]
+    public static async Task DropboxListFolder(string path)
+    {
+        await App.DropboxApi.ListFolder(path);
+    }
+
+    [RelayCommand]
+    public static async Task DropboxCheckUser()
+    {
+        await App.DropboxApi.CheckUser();
+    }
+
+    [RelayCommand]
+    public static async Task DropboxCreateFolder(string path)
+    {
+        await App.DropboxApi.CreateFolder(path);
     }
 }

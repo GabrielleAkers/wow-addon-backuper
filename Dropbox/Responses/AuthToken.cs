@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace Dropbox;
+namespace Dropbox.Responses;
 
-class AuthTokenResponse
+class AuthToken
 {
     [JsonPropertyName("access_token")]
     public string? AccessToken { get; set; }

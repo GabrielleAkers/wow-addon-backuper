@@ -1,9 +1,9 @@
 using System;
 using System.Web;
 
-namespace Dropbox;
+namespace Dropbox.Responses;
 
-class AuthorizeResponse
+class Authorize
 {
     public bool IsError { get; private set; }
     public string? Error { get; private set; }
@@ -11,9 +11,9 @@ class AuthorizeResponse
     public string? Code { get; private set; }
     public string? State { get; private set; }
 
-    public static AuthorizeResponse ParseRequestURL(string? raw_request_url, string original_state)
+    public static Authorize ParseRequestURL(string? raw_request_url, string original_state)
     {
-        var oauth_state = new AuthorizeResponse();
+        var oauth_state = new Authorize();
         if (!string.IsNullOrEmpty(raw_request_url))
         {
             Console.WriteLine($"Raw url {raw_request_url} and state {original_state}");

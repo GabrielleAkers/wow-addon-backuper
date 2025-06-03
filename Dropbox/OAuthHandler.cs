@@ -88,7 +88,7 @@ class OAuthHandler
         var post_res = await Http.client.PostAsync($"{_api_base_url}/oauth2/token?client_id={_client_id}&redirect_uri={redirect_uri}&code_verifier={_code_verifier}&grant_type=authorization_code&code={auth_code}", null);
         if (!post_res.IsSuccessStatusCode) throw new Exception(post_res.ReasonPhrase);
 
-        var response = await post_res.Content.ReadFromJsonAsync(TokenResponseJsonContext.Default.AuthTokenResponse) ?? throw new Exception("Failed to fetch bearer token");
+        var response = await post_res.Content.ReadFromJsonAsync(DropboxResponseJsonContext.Default.AuthToken) ?? throw new Exception("Failed to fetch bearer token");
         token.AccessToken = response.AccessToken;
         token.ExpiresAt = DateTimeOffset.Now.ToUnixTimeSeconds() + response.ExpiresIn;
         token.RefreshToken = response.RefreshToken;
@@ -101,7 +101,7 @@ class OAuthHandler
         var post_res = await Http.client.PostAsync($"{_api_base_url}/oauth2/token?client_id={_client_id}&refresh_token={token.RefreshToken}&grant_type=refresh_token", null);
         if (!post_res.IsSuccessStatusCode) throw new Exception(post_res.ReasonPhrase);
 
-        var response = await post_res.Content.ReadFromJsonAsync(TokenResponseJsonContext.Default.RefreshTokenResponse) ?? throw new Exception("Failed to refresh token");
+        var response = await post_res.Content.ReadFromJsonAsync(DropboxResponseJsonContext.Default.RefreshToken) ?? throw new Exception("Failed to refresh token");
         token.AccessToken = response.AccessToken!;
         token.ExpiresAt = DateTimeOffset.Now.ToUnixTimeSeconds() + response.ExpiresIn;
     }
@@ -171,7 +171,7 @@ class OAuthHandler
             Authorize(redirect_uri);
 
             var context = await http.GetContextAsync().WaitAsync(TimeSpan.FromSeconds(30));
-            var result = AuthorizeResponse.ParseRequestURL(context.Request.RawUrl, _state!);
+            var result = Responses.Authorize.ParseRequestURL(context.Request.RawUrl, _state!);
             if (result.IsError)
                 throw new Exception(result.ErrorDescription);
             if (result.State != _state)

@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Dropbox;
+namespace Dropbox.Responses;
 
 public partial class AccountName : ObservableObject
 {

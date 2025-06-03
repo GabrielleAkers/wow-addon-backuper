@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Net.Mime;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Dropbox.Requests;
 
 namespace Dropbox;
 
@@ -36,24 +37,24 @@ public class ApiClient(BearerToken token)
         var req = await MakePost(
             $"{_api_base_url}/check/user",
             true,
-            new StringContent(JsonSerializer.Serialize(new Dictionary<string, string> { { "query", "foo" } }, KeyValueJsonContext.Default.KeyValueDict)),
+            new CheckUser { Query = "foo" }.ToHttpContent(DropboxRequestJsonContext.Default.CheckUser),
             MediaTypeNames.Application.Json);
         var res = await Http.client.SendAsync(req);
         res.EnsureSuccessStatusCode();
         Console.WriteLine("User is good :)");
     }
 
-    public async Task<UserAccountInfo?> GetAccount()
+    public async Task<Responses.UserAccountInfo?> GetAccount()
     {
         var req = await MakePost(
             $"{_api_base_url}/users/get_account",
             true,
-            new StringContent(JsonSerializer.Serialize(new Dictionary<string, string> { { "account_id", _token.AccountId! } }, KeyValueJsonContext.Default.KeyValueDict)),
+            new GetAccount { AccountId = _token.AccountId! }.ToHttpContent(DropboxRequestJsonContext.Default.GetAccount),
             MediaTypeNames.Application.Json);
         var res = await Http.client.SendAsync(req);
         res.EnsureSuccessStatusCode();
 
-        var content = await res.Content.ReadFromJsonAsync(ApiDataJsonContext.Default.UserAccountInfo);
+        var content = await res.Content.ReadFromJsonAsync(DropboxResponseJsonContext.Default.UserAccountInfo);
         return content;
     }
 
@@ -66,5 +67,41 @@ public class ApiClient(BearerToken token)
             null
         );
         await Http.client.SendAsync(req);
+    }
+
+    public async Task<Responses.ListFolder?> ListFolder(string path)
+    {
+        var req = await MakePost(
+            $"{_api_base_url}/files/list_folder",
+            true,
+            new ListFolder { Path = path }.ToHttpContent(DropboxRequestJsonContext.Default.ListFolder),
+            MediaTypeNames.Application.Json
+        );
+        var res = await Http.client.SendAsync(req);
+        var s = await res.Content.ReadAsStringAsync();
+        if (!res.IsSuccessStatusCode)
+            throw new Exception(s);
+
+        Console.WriteLine(s);
+
+        var content = await res.Content.ReadFromJsonAsync(DropboxResponseJsonContext.Default.ListFolder);
+        return content;
+    }
+
+    public async Task<Responses.CreateFolder?> CreateFolder(string path)
+    {
+        var req = await MakePost(
+            $"{_api_base_url}/files/create_folder_v2",
+            true,
+            new CreateFolder { Path = path }.ToHttpContent(DropboxRequestJsonContext.Default.CreateFolder),
+            MediaTypeNames.Application.Json
+        );
+        var res = await Http.client.SendAsync(req);
+        var s = await res.Content.ReadAsStringAsync();
+        if (!res.IsSuccessStatusCode)
+            throw new Exception(s);
+
+        var content = await res.Content.ReadFromJsonAsync(DropboxResponseJsonContext.Default.CreateFolder);
+        return content;
     }
 }

@@ -4,20 +4,27 @@ using System.Text.Json.Serialization;
 namespace Dropbox;
 
 [JsonSourceGenerationOptions(WriteIndented = true)]
-[JsonSerializable(typeof(AuthTokenResponse))]
-[JsonSerializable(typeof(RefreshTokenResponse))]
-internal partial class TokenResponseJsonContext : JsonSerializerContext
+[JsonSerializable(typeof(Responses.AuthToken))]
+[JsonSerializable(typeof(Responses.RefreshToken))]
+[JsonSerializable(typeof(Responses.UserAccountInfo))]
+[JsonSerializable(typeof(Responses.ListFolder))]
+[JsonSerializable(typeof(Responses.CreateFolder))]
+internal partial class DropboxResponseJsonContext : JsonSerializerContext
 {
+}
+
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(Requests.CheckUser))]
+[JsonSerializable(typeof(Requests.GetAccount))]
+[JsonSerializable(typeof(Requests.ListFolder))]
+[JsonSerializable(typeof(Requests.CreateFolder))]
+internal partial class DropboxRequestJsonContext : JsonSerializerContext
+{
+
 }
 
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(IDictionary<string, string>), TypeInfoPropertyName = "KeyValueDict")]
 internal partial class KeyValueJsonContext : JsonSerializerContext
-{
-}
-
-[JsonSourceGenerationOptions(WriteIndented = true)]
-[JsonSerializable(typeof(UserAccountInfo))]
-internal partial class ApiDataJsonContext : JsonSerializerContext
 {
 }

@@ -13,6 +13,7 @@
     d:DesignHeight="600"
     d:DesignWidth="800"
     x:DataType="vm:MainViewModel"
+    Background="Transparent"
     ExtendClientAreaChromeHints="NoChrome"
     ExtendClientAreaTitleBarHeightHint="-1"
     ExtendClientAreaToDecorationsHint="True"
@@ -27,7 +28,7 @@
             <Border
                 Margin="4"
                 Background="#F5A9B8"
-                BoxShadow="0 0 10 0 #ffffafcc"
+                BoxShadow="0 0 10 0 Black"
                 CornerRadius="20"
                 DockPanel.Dock="Top">
                 <DockPanel Margin="-2" VerticalAlignment="Center">
@@ -70,6 +71,8 @@
                     <TextBlock
                         Margin="25,0,25,0"
                         VerticalAlignment="Center"
+                        FontSize="20"
+                        Foreground="#242424"
                         Text="{Binding UserAccountInfo.Name.DisplayName, FallbackValue=Not signed in, StringFormat='Signed in as {0}'}"
                         TextAlignment="Center" />
                     <StackPanel
@@ -185,7 +188,7 @@
                 Margin="4"
                 Background="#F5A9B8"
                 BorderThickness="2"
-                BoxShadow="0 0 10 0 #ffffafcc"
+                BoxShadow="0 0 10 0 Black"
                 CornerRadius="20"
                 DockPanel.Dock="Left" />
             <Border
@@ -193,8 +196,20 @@
                 Margin="4"
                 Background="#F5A9B8"
                 BorderThickness="2"
-                BoxShadow="0 0 10 0 #ffffafcc"
-                CornerRadius="20" />
+                BoxShadow="0 0 10 0 Black"
+                CornerRadius="20">
+                <DockPanel>
+                    <Button Command="{Binding DropboxCheckUserCommand}" Content="Check user" />
+                    <Button
+                        Command="{Binding DropboxListFolderCommand}"
+                        CommandParameter="/wow-addon-backup"
+                        Content="List Folder" />
+                    <Button
+                        Command="{Binding DropboxCreateFolderCommand}"
+                        CommandParameter="/wow-addon-backup/test"
+                        Content="Create Folder" />
+                </DockPanel>
+            </Border>
         </DockPanel>
     </Border>
 </Window>
