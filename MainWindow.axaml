@@ -22,6 +22,11 @@
     SystemDecorations="None"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
+
+    <Window.Resources>
+        <vm:EnumConverter x:Key="enumConverter" />
+    </Window.Resources>
+
     <Border Background="{DynamicResource SystemRegionColor}" CornerRadius="20">
         <DockPanel>
             <Border
@@ -72,7 +77,7 @@
                         VerticalAlignment="Center"
                         FontSize="20"
                         Foreground="#242424"
-                        Text="{Binding UserAccountInfo.Name.DisplayName, FallbackValue=Not signed in, StringFormat='Signed in as {0}'}"
+                        Text="{Binding UserAccountInfo.Name.DisplayName, FallbackValue=Not signed in to DropBox, StringFormat='DropBox Account: {0}'}"
                         TextAlignment="Center" />
                     <StackPanel
                         Margin="0,0,6,0"
@@ -180,8 +185,8 @@
                     </StackPanel>
                 </DockPanel>
             </Border>
+
             <Border
-                Name="LeftPanel"
                 Width="200"
                 MaxWidth="200"
                 Margin="4"
@@ -227,27 +232,120 @@
                         CornerRadius="20 20 0 0"
                         DockPanel.Dock="Top"
                         ItemsSource="{Binding InstalledGameVersions}"
-                        SelectedIndex="{Binding SelectedGameVersionIndex}" />
-                    <Rectangle />
+                        SelectedIndex="{Binding SelectedGameVersionIndex}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding, Converter={StaticResource enumConverter}, ConverterParameter=separate_words}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                        <Button HorizontalAlignment="Stretch" Content="Upload :)" />
+                        <Button HorizontalAlignment="Stretch" Content="Download :)" />
+                    </StackPanel>
                 </DockPanel>
             </Border>
+
             <Border
-                Name="MainContentPanel"
                 Margin="4"
                 Background="#F5A9B8"
                 BorderThickness="2"
                 BoxShadow="0 0 10 0 Black"
                 CornerRadius="20">
                 <DockPanel>
-                    <Button Command="{Binding DropboxCheckUserCommand}" Content="Check user" />
-                    <Button
-                        Command="{Binding DropboxListFolderCommand}"
-                        CommandParameter="/wow-addon-backup"
-                        Content="List Folder" />
-                    <Button
-                        Command="{Binding DropboxCreateFolderCommand}"
-                        CommandParameter="/wow-addon-backup/test"
-                        Content="Create Folder" />
+                    <ComboBox
+                        Name="AddOnsOrWTFComboBox"
+                        Margin="-2"
+                        HorizontalAlignment="Stretch"
+                        BorderBrush="Black"
+                        CornerRadius="20 20 0 0"
+                        DockPanel.Dock="Top"
+                        ItemsSource="{Binding AddonsOrAccountChoices}"
+                        SelectedIndex="{Binding SelectedAddonsOrAccountChoicesIndex}" />
+
+                    <DockPanel
+                        Margin="12"
+                        VerticalAlignment="Stretch"
+                        Grid.IsSharedSizeScope="True">
+                        <Border
+                            Margin="-4,-4,-4,-1"
+                            Background="#ffd000"
+                            BoxShadow="0 0 5 0 Black"
+                            CornerRadius="12"
+                            DockPanel.Dock="Top"
+                            ZIndex="999">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition SharedSizeGroup="A" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <CheckBox
+                                    Grid.Column="0"
+                                    Width="32"
+                                    Margin="20,0,0,0"
+                                    IsChecked="{Binding SelectAllAddonsOrAccountRows}">
+                                    <CheckBox.Styles>
+                                        <Style Selector="CheckBox:checked:pointerover /template/ Path#CheckGlyph">
+                                            <Setter Property="Fill" Value="Black" />
+                                        </Style>
+                                    </CheckBox.Styles>
+                                </CheckBox>
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="6,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="Black"
+                                    Text="Name"
+                                    TextAlignment="Center" />
+                            </Grid>
+                        </Border>
+
+                        <Border ClipToBounds="True" CornerRadius="0 0 12 12">
+                            <ScrollViewer VerticalScrollBarVisibility="Visible">
+                                <ItemsControl ItemsSource="{Binding AddonsOrAccountFolderDataRows}">
+                                    <ItemsControl.Styles>
+                                        <Style Selector="ContentPresenter">
+                                            <Setter Property="Background" Value="#415a77" />
+                                        </Style>
+                                        <Style Selector="ContentPresenter:nth-child(2n)">
+                                            <Setter Property="Background" Value="#778da9" />
+                                        </Style>
+                                    </ItemsControl.Styles>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid RowDefinitions="auto, auto" ShowGridLines="True">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition SharedSizeGroup="A" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <CheckBox
+                                                    Grid.Column="0"
+                                                    Width="32"
+                                                    Margin="12,0,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    IsChecked="{Binding IsSelected}">
+                                                    <CheckBox.Styles>
+                                                        <Style Selector="CheckBox:checked:pointerover /template/ Path#CheckGlyph">
+                                                            <Setter Property="Fill" Value="Black" />
+                                                        </Style>
+                                                    </CheckBox.Styles>
+                                                </CheckBox>
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="6"
+                                                    VerticalAlignment="Center"
+                                                    Text="{Binding StorageItem.Name}"
+                                                    TextAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </DockPanel>
                 </DockPanel>
             </Border>
         </DockPanel>

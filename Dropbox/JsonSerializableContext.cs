@@ -9,6 +9,7 @@ namespace Dropbox;
 [JsonSerializable(typeof(Responses.UserAccountInfo))]
 [JsonSerializable(typeof(Responses.ListFolder))]
 [JsonSerializable(typeof(Responses.CreateFolder))]
+[JsonSerializable(typeof(Responses.GetMetadata))]
 internal partial class DropboxResponseJsonContext : JsonSerializerContext
 {
 }
@@ -18,6 +19,7 @@ internal partial class DropboxResponseJsonContext : JsonSerializerContext
 [JsonSerializable(typeof(Requests.GetAccount))]
 [JsonSerializable(typeof(Requests.ListFolder))]
 [JsonSerializable(typeof(Requests.CreateFolder))]
+[JsonSerializable(typeof(Requests.GetMetadata))]
 internal partial class DropboxRequestJsonContext : JsonSerializerContext
 {
 

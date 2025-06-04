@@ -78,11 +78,8 @@ public class ApiClient(BearerToken token)
             MediaTypeNames.Application.Json
         );
         var res = await Http.client.SendAsync(req);
-        var s = await res.Content.ReadAsStringAsync();
         if (!res.IsSuccessStatusCode)
-            throw new Exception(s);
-
-        Console.WriteLine(s);
+            throw new Exception(await res.Content.ReadAsStringAsync());
 
         var content = await res.Content.ReadFromJsonAsync(DropboxResponseJsonContext.Default.ListFolder);
         return content;
@@ -97,11 +94,26 @@ public class ApiClient(BearerToken token)
             MediaTypeNames.Application.Json
         );
         var res = await Http.client.SendAsync(req);
-        var s = await res.Content.ReadAsStringAsync();
         if (!res.IsSuccessStatusCode)
-            throw new Exception(s);
+            throw new Exception(await res.Content.ReadAsStringAsync());
 
         var content = await res.Content.ReadFromJsonAsync(DropboxResponseJsonContext.Default.CreateFolder);
+        return content;
+    }
+
+    public async Task<Responses.GetMetadata?> GetMetadata(string path)
+    {
+        var req = await MakePost(
+            $"{_api_base_url}/files/get_metadata",
+            true,
+            new GetMetadata { Path = path }.ToHttpContent(DropboxRequestJsonContext.Default.GetMetadata),
+            MediaTypeNames.Application.Json
+        );
+        var res = await Http.client.SendAsync(req);
+        if (!res.IsSuccessStatusCode)
+            throw new Exception(await res.Content.ReadAsStringAsync());
+
+        var content = await res.Content.ReadFromJsonAsync(DropboxResponseJsonContext.Default.GetMetadata);
         return content;
     }
 }

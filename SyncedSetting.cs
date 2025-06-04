@@ -58,6 +58,11 @@ public partial class SyncedSetting<T> : ObservableObject
         }
     }
 
+    public override string? ToString()
+    {
+        return Value?.ToString();
+    }
+
     [ObservableProperty]
     private T? _value;
 }

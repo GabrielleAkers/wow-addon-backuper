@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -20,12 +21,50 @@ public partial class MainViewModel : ObservableObject
     {
         _dropboxToken = token;
 
+        // special handling for nested property change in SyncedSetting
         WowInstallDir.PropertyChanged += HandleWowInstallDirChanged;
+        PropertyChanged += OnPropertyChanged;
+    }
+
+    #region ChangeHandlers
+
+    public void HandleWindowLoaded()
+    {
+        // hack to update view on initial load, called after Window is constructed by app
+        HandleWowInstallDirChanged(WowInstallDir, new PropertyChangedEventArgs(nameof(WowInstallDir)));
+    }
+
+    private async void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(SelectedGameVersionIndex):
+                await HandleSelectedGameVersionIndexChanged();
+                break;
+            case nameof(SelectedAddonsOrAccountChoicesIndex):
+                if (sender == null)
+                    break;
+                HandleSelectedAddonsOrAccountIndexChanged();
+                break;
+            case nameof(SelectAllAddonsOrAccountRows):
+                if (sender == null)
+                    break;
+                HandleSelectAllAddonsOrAccountRowsChanged();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void HandleSelectAllAddonsOrAccountRowsChanged()
+    {
+        var t = AddonsOrAccountFolderDataRows.ToList();
+        t.ForEach(r => r.IsSelected = SelectAllAddonsOrAccountRows);
+        AddonsOrAccountFolderDataRows = new ObservableCollection<AddonsOrAccountFolderDataRow>(t);
     }
 
     private void HandleWowInstallDirChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Console.WriteLine($"Prop changed {e.PropertyName}");
         if (e.PropertyName == "WowInstallDir" && sender != null)
         {
             var install_dir = (sender as SyncedSetting<string>)!.Value;
@@ -39,11 +78,60 @@ public partial class MainViewModel : ObservableObject
                 if (Directory.Exists(dir))
                 {
                     Console.WriteLine($"Found version {wow_vers[i]}");
-                    InstalledGameVersions.Add(wow_vers[i].SeparateWords());
+                    if (!InstalledGameVersions.Contains(wow_vers[i]))
+                        InstalledGameVersions.Add(wow_vers[i]);
                 }
             }
+            OnPropertyChanged(nameof(SelectedGameVersionIndex));
         }
     }
+
+    private async Task HandleSelectedGameVersionIndexChanged()
+    {
+        Console.WriteLine($"The thing changed {SelectedGameVersionIndex}");
+        var storage = MainWindow?.StorageProvider;
+        Console.WriteLine($"The thing storage {storage}");
+        if (storage == null || WowInstallDir.Value == null) return;
+
+        var wow_storage = new WowStorageHandler(storage, WowInstallDir.Value, InstalledGameVersions);
+        var addons = await wow_storage.GetAddons(InstalledGameVersions[SelectedGameVersionIndex]);
+        var wtf = await wow_storage.GetWTF(InstalledGameVersions[SelectedGameVersionIndex]);
+
+        SelectedGameVersionAddons = addons ?? [];
+        SelectedGameVersionWTF = wtf ?? [];
+
+        OnPropertyChanged(nameof(SelectedAddonsOrAccountChoicesIndex));
+        SelectAllAddonsOrAccountRows = false;
+    }
+
+    private void HandleSelectedAddonsOrAccountIndexChanged()
+    {
+        var choice = Enum.GetValues<AddonsOrAccount>().ToList().Find(e => e.StringValue() == AddonsOrAccountChoices[SelectedAddonsOrAccountChoicesIndex]);
+        ObservableCollection<AddonsOrAccountFolderDataRow> dataRows = [];
+        switch (choice)
+        {
+            case AddonsOrAccount.AddOns:
+                SelectedGameVersionAddons.ForEach(s =>
+                {
+                    dataRows.Add(new AddonsOrAccountFolderDataRow(s) { IsSelected = false });
+                });
+                break;
+            case AddonsOrAccount.Account:
+                SelectedGameVersionWTF.ForEach(s =>
+                {
+                    dataRows.Add(new AddonsOrAccountFolderDataRow(s) { IsSelected = false });
+                });
+                break;
+            default:
+                break;
+        }
+        AddonsOrAccountFolderDataRows = dataRows;
+        SelectAllAddonsOrAccountRows = false;
+    }
+
+    #endregion
+
+    #region ObservableProperties
 
     [ObservableProperty]
     private Dropbox.BearerToken _dropboxToken;
@@ -55,20 +143,42 @@ public partial class MainViewModel : ObservableObject
     private SyncedSetting<string> _wowInstallDir = new("WowInstallDir", "app-settings.data");
 
     [ObservableProperty]
-    private List<string> _installedGameVersions = new();
+    private List<WowVersions> _installedGameVersions = [];
 
     [ObservableProperty]
     private int _selectedGameVersionIndex = 0;
 
+    [ObservableProperty]
+    private List<IStorageItem> _selectedGameVersionAddons = [];
+
+    [ObservableProperty]
+    private List<IStorageItem> _selectedGameVersionWTF = [];
+
+    [ObservableProperty]
+    private List<string> _addonsOrAccountChoices = [.. Enum.GetValues<AddonsOrAccount>().Select(e => e.StringValue())];
+
+    [ObservableProperty]
+    private int _selectedAddonsOrAccountChoicesIndex = 0;
+
+    [ObservableProperty]
+    private ObservableCollection<AddonsOrAccountFolderDataRow> _addonsOrAccountFolderDataRows = [];
+
+    [ObservableProperty]
+    private bool _selectAllAddonsOrAccountRows;
+
+    #endregion
+
+    #region Commands
+
     [RelayCommand]
-    public static async Task DropboxSignin()
+    private static async Task DropboxSignin()
     {
         await Dropbox.OAuthHandler.Instance().SignIn(App.AppState.DropboxToken);
         App.AppState.UserAccountInfo = await App.DropboxApi.GetAccount();
     }
 
     [RelayCommand]
-    public static async Task DropboxSignout()
+    private static async Task DropboxSignout()
     {
         await App.DropboxApi.RevokeToken();
         Dropbox.OAuthHandler.Instance().SignOut();
@@ -77,21 +187,29 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public static async Task DropboxListFolder(string path)
+    private static async Task DropboxListFolder(string path)
     {
         await App.DropboxApi.ListFolder(path);
     }
 
     [RelayCommand]
-    public static async Task DropboxCheckUser()
+    private static async Task DropboxCheckUser()
     {
         await App.DropboxApi.CheckUser();
     }
 
     [RelayCommand]
-    public static async Task DropboxCreateFolder(string path)
+    private static async Task DropboxCreateFolder(string path)
     {
         await App.DropboxApi.CreateFolder(path);
+    }
+
+    [RelayCommand]
+    private static async Task<Dropbox.Responses.GetMetadata?> DropboxGetMetadata(string path)
+    {
+        var metadata = await App.DropboxApi.GetMetadata(path);
+        Console.WriteLine($"hash for {path} = {metadata?.ContentHash}");
+        return metadata;
     }
 
     [RelayCommand]
@@ -106,4 +224,5 @@ public partial class MainViewModel : ObservableObject
             WowInstallDir.Value = $"{picked_folder[0].Path.AbsolutePath.Replace("%20", " ")}";
         }
     }
+    #endregion
 }
