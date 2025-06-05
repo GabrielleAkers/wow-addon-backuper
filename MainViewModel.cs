@@ -88,9 +88,7 @@ public partial class MainViewModel : ObservableObject
 
     private async Task HandleSelectedGameVersionIndexChanged()
     {
-        Console.WriteLine($"The thing changed {SelectedGameVersionIndex}");
         var storage = MainWindow?.StorageProvider;
-        Console.WriteLine($"The thing storage {storage}");
         if (storage == null || WowInstallDir.Value == null) return;
 
         var wow_storage = new WowStorageHandler(storage, WowInstallDir.Value, InstalledGameVersions);
@@ -205,7 +203,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private static async Task<Dropbox.Responses.GetMetadata?> DropboxGetMetadata(string path)
+    private static async Task<Dropbox.Responses.FileMetadata?> DropboxGetMetadata(string path)
     {
         var metadata = await App.DropboxApi.GetMetadata(path);
         Console.WriteLine($"hash for {path} = {metadata?.ContentHash}");
@@ -223,6 +221,14 @@ public partial class MainViewModel : ObservableObject
             if (picked_folder.Count <= 0) return;
             WowInstallDir.Value = $"{picked_folder[0].Path.AbsolutePath.Replace("%20", " ")}";
         }
+    }
+
+    [RelayCommand]
+    private async Task UploadFolder()
+    {
+        await App.DropboxApi.UploadFolder(
+            $"{WowInstallDir.Value}{InstalledGameVersions[SelectedGameVersionIndex].StringValue()}/Interface/AddOns/OmniCC_Config",
+            $"{Enum.GetName(InstalledGameVersions[SelectedGameVersionIndex])}/Addons");
     }
     #endregion
 }

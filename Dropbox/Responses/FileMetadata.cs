@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Dropbox.Responses;
 
-public class GetMetadata
+public record class FileMetadata
 {
     [JsonPropertyName("id")]
     public string? Id { get; set; }

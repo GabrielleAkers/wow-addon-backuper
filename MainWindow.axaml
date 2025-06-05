@@ -242,6 +242,10 @@
                     <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center">
                         <Button HorizontalAlignment="Stretch" Content="Upload :)" />
                         <Button HorizontalAlignment="Stretch" Content="Download :)" />
+                        <Button
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding UploadFolderCommand}"
+                            Content="Upload folder" />
                     </StackPanel>
                 </DockPanel>
             </Border>
