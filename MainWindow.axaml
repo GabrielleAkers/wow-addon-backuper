@@ -25,7 +25,23 @@
 
     <Window.Resources>
         <vm:EnumConverter x:Key="enumConverter" />
+        <StreamGeometry x:Key="spinner">M10,3 C6.13401,3 3,6.13401 3,10 C3,10.2761 2.77614,10.5 2.5,10.5 C2.22386,10.5 2,10.2761 2,10 C2,5.58172 5.58172,2 10,2 C14.4183,2 18,5.58172 18,10 C18,14.4183 14.4183,18 10,18 C9.72386,18 9.5,17.7761 9.5,17.5 C9.5,17.2239 9.72386,17 10,17 C13.866,17 17,13.866 17,10 C17,6.13401 13.866,3 10,3 Z</StreamGeometry>
     </Window.Resources>
+
+    <Window.Styles>
+        <Style Selector="PathIcon.spin">
+            <Style.Animations>
+                <Animation IterationCount="INFINITE" Duration="0:0:2">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="RotateTransform.Angle" Value="0.0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="RotateTransform.Angle" Value="360.0" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </Window.Styles>
 
     <Border Background="{DynamicResource SystemRegionColor}" CornerRadius="20">
         <DockPanel>
@@ -240,12 +256,16 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                     <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center">
-                        <Button HorizontalAlignment="Stretch" Content="Upload :)" />
-                        <Button HorizontalAlignment="Stretch" Content="Download :)" />
                         <Button
                             HorizontalAlignment="Stretch"
-                            Command="{Binding UploadFolderCommand}"
-                            Content="Upload folder" />
+                            Command="{Binding UploadSelectedCommand}"
+                            Content="Upload to DropBox"
+                            ToolTip.Tip="This will overwrite what's on DropBox 🗿" />
+                        <Button
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding DownloadSelectedCommand}"
+                            Content="Download from DropBox"
+                            ToolTip.Tip="This will overwrite local files 🗿" />
                     </StackPanel>
                 </DockPanel>
             </Border>
@@ -282,6 +302,7 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition SharedSizeGroup="A" />
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="32" />
                                 </Grid.ColumnDefinitions>
 
                                 <CheckBox
@@ -297,11 +318,21 @@
                                 </CheckBox>
                                 <TextBlock
                                     Grid.Column="1"
-                                    Margin="6,0"
+                                    Margin="0,0,12,0"
                                     VerticalAlignment="Center"
                                     Foreground="Black"
                                     Text="Name"
                                     TextAlignment="Center" />
+                                <Border
+                                    Grid.Column="2"
+                                    Width="32"
+                                    Margin="0,0,16,0">
+                                    <PathIcon
+                                        Classes="spin"
+                                        Data="{StaticResource spinner}"
+                                        Foreground="#613583"
+                                        IsVisible="{Binding AnyIsLoading}" />
+                                </Border>
                             </Grid>
                         </Border>
 
@@ -318,10 +349,11 @@
                                     </ItemsControl.Styles>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid RowDefinitions="auto, auto" ShowGridLines="True">
+                                            <Grid RowDefinitions="auto, auto">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition SharedSizeGroup="A" />
                                                     <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="32" />
                                                 </Grid.ColumnDefinitions>
 
                                                 <CheckBox
@@ -339,10 +371,19 @@
                                                 </CheckBox>
                                                 <TextBlock
                                                     Grid.Column="1"
-                                                    Margin="6"
                                                     VerticalAlignment="Center"
                                                     Text="{Binding StorageItem.Name}"
                                                     TextAlignment="Center" />
+                                                <Border
+                                                    Grid.Column="2"
+                                                    Width="32"
+                                                    Margin="0,0,12,0">
+                                                    <PathIcon
+                                                        Classes="spin"
+                                                        Data="{StaticResource spinner}"
+                                                        Foreground="#ffafcc"
+                                                        IsVisible="{Binding IsLoading}" />
+                                                </Border>
                                             </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>

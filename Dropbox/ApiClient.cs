@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.Mime;
 using System.Threading.Tasks;
-using Dropbox.Requests;
 
 namespace Dropbox;
 
@@ -39,7 +39,7 @@ public class ApiClient(BearerToken token)
         var req = await MakePost(
             $"{_api_base_url}/check/user",
             true,
-            new CheckUser { Query = "foo" }.ToStringContent(DropboxRequestJsonContext.Default.CheckUser),
+            new Requests.CheckUser { Query = "foo" }.ToStringContent(DropboxRequestJsonContext.Default.CheckUser),
             MediaTypeNames.Application.Json);
         var res = await Http.client.SendAsync(req);
         res.EnsureSuccessStatusCode();
@@ -51,7 +51,7 @@ public class ApiClient(BearerToken token)
         var req = await MakePost(
             $"{_api_base_url}/users/get_account",
             true,
-            new GetAccount { AccountId = _token.AccountId! }.ToStringContent(DropboxRequestJsonContext.Default.GetAccount),
+            new Requests.GetAccount { AccountId = _token.AccountId! }.ToStringContent(DropboxRequestJsonContext.Default.GetAccount),
             MediaTypeNames.Application.Json);
         var res = await Http.client.SendAsync(req);
         res.EnsureSuccessStatusCode();
@@ -76,7 +76,7 @@ public class ApiClient(BearerToken token)
         var req = await MakePost(
             $"{_api_base_url}/files/list_folder",
             true,
-            new ListFolder { Path = path }.ToStringContent(DropboxRequestJsonContext.Default.ListFolder),
+            new Requests.ListFolder { Path = path }.ToStringContent(DropboxRequestJsonContext.Default.ListFolder),
             MediaTypeNames.Application.Json
         );
         var res = await Http.client.SendAsync(req);
@@ -92,7 +92,7 @@ public class ApiClient(BearerToken token)
         var req = await MakePost(
             $"{_api_base_url}/files/list_folder/co",
             true,
-            new ListFolderContinue { Cursor = cursor }.ToStringContent(DropboxRequestJsonContext.Default.ListFolderContinue),
+            new Requests.ListFolderContinue { Cursor = cursor }.ToStringContent(DropboxRequestJsonContext.Default.ListFolderContinue),
             MediaTypeNames.Application.Json
         );
         var res = await Http.client.SendAsync(req);
@@ -108,7 +108,7 @@ public class ApiClient(BearerToken token)
         var req = await MakePost(
             $"{_api_base_url}/files/create_folder_v2",
             true,
-            new CreateFolder { Path = path }.ToStringContent(DropboxRequestJsonContext.Default.CreateFolder),
+            new Requests.CreateFolder { Path = path }.ToStringContent(DropboxRequestJsonContext.Default.CreateFolder),
             MediaTypeNames.Application.Json
         );
         var res = await Http.client.SendAsync(req);
@@ -124,7 +124,7 @@ public class ApiClient(BearerToken token)
         var req = await MakePost(
             $"{_api_base_url}/files/get_metadata",
             true,
-            new GetMetadata { Path = path }.ToStringContent(DropboxRequestJsonContext.Default.GetMetadata),
+            new Requests.GetMetadata { Path = path }.ToStringContent(DropboxRequestJsonContext.Default.GetMetadata),
             MediaTypeNames.Application.Json
         );
         var res = await Http.client.SendAsync(req);
@@ -146,7 +146,7 @@ public class ApiClient(BearerToken token)
             new ByteArrayContent(bytes),
             MediaTypeNames.Application.Octet
         );
-        req.Headers.Add("Dropbox-API-Arg", new Upload { Path = path }.ToJson(DropboxRequestJsonContext.Default.Upload));
+        req.Headers.Add("Dropbox-API-Arg", new Requests.Upload { Path = path, Mode = "overwrite" }.ToJson(DropboxRequestJsonContext.Default.Upload));
         var res = await Http.client.SendAsync(req);
         if (res.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
         {
@@ -168,7 +168,7 @@ public class ApiClient(BearerToken token)
             new ByteArrayContent(bytes),
             MediaTypeNames.Application.Octet
         );
-        req.Headers.Add("Dropbox-API-Arg", new UploadSessionStart { Close = false }.ToJson(DropboxRequestJsonContext.Default.UploadSessionStart));
+        req.Headers.Add("Dropbox-API-Arg", new Requests.UploadSessionStart { Close = false }.ToJson(DropboxRequestJsonContext.Default.UploadSessionStart));
         var res = await Http.client.SendAsync(req);
         if (!res.IsSuccessStatusCode)
             throw new Exception(await res.Content.ReadAsStringAsync());
@@ -186,9 +186,9 @@ public class ApiClient(BearerToken token)
             MediaTypeNames.Application.Octet
         );
         req.Headers.Add("Dropbox-API-Arg",
-            new UploadSessionAppend
+            new Requests.UploadSessionAppend
             {
-                Cursor = new UploadSessionCursor { Offset = offset, SessionId = sessionId }
+                Cursor = new Requests.UploadSessionCursor { Offset = offset, SessionId = sessionId }
             }
                 .ToJson(DropboxRequestJsonContext.Default.UploadSessionAppend));
         var res = await Http.client.SendAsync(req);
@@ -205,10 +205,10 @@ public class ApiClient(BearerToken token)
             MediaTypeNames.Application.Octet
         );
         req.Headers.Add("Dropbox-API-Arg",
-            new UploadSessionFinish
+            new Requests.UploadSessionFinish
             {
-                Cursor = new UploadSessionCursor { Offset = offset, SessionId = sessionId },
-                Commit = new UploadSessionCommit { Path = path }
+                Cursor = new Requests.UploadSessionCursor { Offset = offset, SessionId = sessionId },
+                Commit = new Requests.UploadSessionCommit { Path = path }
             }
                 .ToJson(DropboxRequestJsonContext.Default.UploadSessionAppend));
         var res = await Http.client.SendAsync(req);
@@ -224,7 +224,7 @@ public class ApiClient(BearerToken token)
         var req = await MakePost(
             $"{_api_base_url}/files/upload_session/start_batch",
             true,
-            new UploadSessionStartBatch { NumSessions = numSessions }.ToStringContent(DropboxRequestJsonContext.Default.UploadSessionStartBatch),
+            new Requests.UploadSessionStartBatch { NumSessions = numSessions }.ToStringContent(DropboxRequestJsonContext.Default.UploadSessionStartBatch),
             MediaTypeNames.Application.Json
         );
         var res = await Http.client.SendAsync(req);
@@ -235,7 +235,7 @@ public class ApiClient(BearerToken token)
         return content;
     }
 
-    public async Task<Responses.BatchSessionAppend?> UploadSessionBatchAppend(byte[] bytes, UploadSessionAppendBatch appendBatches, int? delay = null)
+    public async Task<Responses.BatchSessionAppend?> UploadSessionBatchAppend(byte[] bytes, Requests.UploadSessionAppendBatch appendBatches, int? delay = null)
     {
         if (delay != null)
             await Task.Delay((int)delay);
@@ -260,8 +260,11 @@ public class ApiClient(BearerToken token)
         return content;
     }
 
-    public async Task<Responses.BatchSessionFinish?> UploadSessionBatchFinish(UploadSessionFinishBatch finishBatch)
+    public async Task<Responses.BatchSessionFinish?> UploadSessionBatchFinish(Requests.UploadSessionFinishBatch finishBatch, int? delay = null)
     {
+        if (delay != null)
+            await Task.Delay((int)delay);
+
         Console.WriteLine($"Finishing batch");
         var req = await MakePost(
             $"{_api_base_url}/files/upload_session/finish_batch_v2",
@@ -270,102 +273,67 @@ public class ApiClient(BearerToken token)
             MediaTypeNames.Application.Json
         );
         var res = await Http.client.SendAsync(req);
+        if (res.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        {
+            var retryAfter = res.Headers.RetryAfter?.Delta;
+            return await UploadSessionBatchFinish(finishBatch, retryAfter == null ? 1000 : (int)retryAfter.Value.TotalMilliseconds);
+        }
         if (!res.IsSuccessStatusCode)
             throw new Exception(await res.Content.ReadAsStringAsync());
 
         var content = await res.Content.ReadFromJsonAsync(DropboxResponseJsonContext.Default.BatchSessionFinish);
+        List<Requests.UploadSessionFinish> failedWrites = [];
+        for (var i = 0; i < content?.Entries.Count; i++)
+        {
+            var r = content?.Entries[i];
+            if (r?.Failure != null)
+            {
+                if (r.Failure.LookupFailed?.Tag == "too_many_write_operations")
+                {
+                    failedWrites.Add(finishBatch.Entries[i]);
+                }
+            }
+        }
+        if (failedWrites.Count > 0)
+            return await UploadSessionBatchFinish(new() { Entries = failedWrites });
         return content;
     }
 
-    public async Task UploadFolder(string folder_path, string save_path)
+    public async Task<Stream> Download(string path)
     {
-        var baseDir = new DirectoryInfo(folder_path);
+        var req = await MakePost(
+            $"{_content_base_url}/files/download",
+            true,
+            null,
+            null
+        );
+        req.Headers.Add("Dropbox-API-Arg", new Requests.Download { Path = path }.ToJson(DropboxRequestJsonContext.Default.Download));
+        var res = await Http.client.SendAsync(req);
+        if (!res.IsSuccessStatusCode)
+            throw new Exception(await res.Content.ReadAsStringAsync());
+
+        return await res.Content.ReadAsStreamAsync();
+    }
+
+    public async Task<Responses.FileMetadata?> UploadFolderZipped(string folderPath, string savePath)
+    {
+        var baseDir = new DirectoryInfo(folderPath);
         var dirName = baseDir.Name;
-        List<string> files = [.. Directory.EnumerateFiles(folder_path, "*", SearchOption.AllDirectories)];
-
-        List<List<string>> fileBatches = [[]];
-        int fileCount = 0;
-        int batchCount = 0;
-        files.ForEach(f =>
+        using (MemoryStream zip = new())
         {
-            if (fileCount > 1000)
-            {
-                fileBatches.Add([]);
-                batchCount++;
-                fileCount = 0;
-            }
-            fileBatches[batchCount].Add(f);
-            fileCount++;
-        });
-
-        const long maxSize = 150 * 1024 * 1024; // 150MiB
-        for (var i = 0; i < fileBatches.Count; i++)
-        {
-            var batchSessionIds = await UploadSessionBatchStart(fileBatches[i].Count) ?? throw new Exception("Error creating batch session ids");
-            UploadSessionFinishBatch finishBatch = new() { Entries = [] };
-            long bytesSent = 0;
-            List<Task<Responses.BatchSessionAppend?>> appendTasks = [];
-            for (var j = 0; j < fileBatches[i].Count; j++)
-            {
-                var f = fileBatches[i][j];
-                var finfo = new FileInfo(f);
-                bytesSent += finfo.Length;
-                var fullNameToBase = f.Split(dirName, 2)[1];
-                var fullSavePath = $"/{save_path}/{dirName}{fullNameToBase}";
-                Console.WriteLine($"Uploading:  Size  {finfo.Length} \n        {f} \n     -> {fullSavePath}");
-                byte[] buffer = new byte[finfo.Length];
-                if (finfo.Length >= maxSize)
-                {
-                    throw new Exception($"File {f} too big. must use chunked upload :)");
-                }
-                else
-                {
-                    using (var fs = File.OpenRead(f))
-                    {
-                        await fs.ReadExactlyAsync(buffer);
-                    }
-                }
-
-                var k = j;
-                appendTasks.Add(Task.Run(async () => await UploadSessionBatchAppend(buffer, new()
-                {
-                    Entries = [ new()
-                    {
-                        Length = finfo.Length,
-                        Close = true,
-                        Cursor = new() { Offset = 0, SessionId = batchSessionIds.SessionIds[k] }
-                    }]
-                })));
-
-                finishBatch.Entries.Add(
-                    new()
-                    {
-                        Commit = new() { Path = fullSavePath },
-                        Cursor = new() { Offset = finfo.Length, SessionId = batchSessionIds.SessionIds[k] }
-                    }
-                );
-            }
-            Console.WriteLine($"Bytes to send {bytesSent}");
-            if (bytesSent > maxSize) throw new Exception("Upload bytes too big must chunk it :)");
-
-            var appendResults = await Task.WhenAll(appendTasks);
-
-            appendResults.ToList().ForEach(r => r?.Entries.ForEach(e =>
-            {
-                if (e.Failure != null)
-                {
-                    Console.WriteLine($"Append result: {e.Failure}");
-                }
-            }));
-
-            var finishRes = await UploadSessionBatchFinish(finishBatch);
-            finishRes?.Entries.ForEach(e =>
-            {
-                if (e.Failure != null)
-                {
-                    Console.WriteLine($"finish fail {e.Failure}");
-                }
-            });
+            ZipFile.CreateFromDirectory(baseDir.FullName, zip);
+            var fullSavePath = $"/{savePath}/{dirName}.zip";
+            Console.WriteLine($"Uploading:  Size  {zip.Length / (1024 * 1024)} MB \n        {folderPath} \n     -> {fullSavePath}");
+            return await Upload(zip.ToArray(), fullSavePath);
         }
+    }
+
+    public async Task DownloadFolderZipped(string saveTo, string dropboxFolder)
+    {
+        var saveDir = new DirectoryInfo(saveTo);
+        var dirName = saveDir.Name;
+        var fullDropboxPath = $"/{dropboxFolder}/{dirName}.zip";
+        var stream = await Download(fullDropboxPath);
+        ZipFile.ExtractToDirectory(stream, saveTo, true);
     }
 }

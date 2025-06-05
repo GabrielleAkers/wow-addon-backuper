@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -105,7 +106,7 @@ public partial class MainViewModel : ObservableObject
     private void HandleSelectedAddonsOrAccountIndexChanged()
     {
         var choice = Enum.GetValues<AddonsOrAccount>().ToList().Find(e => e.StringValue() == AddonsOrAccountChoices[SelectedAddonsOrAccountChoicesIndex]);
-        ObservableCollection<AddonsOrAccountFolderDataRow> dataRows = [];
+        List<AddonsOrAccountFolderDataRow> dataRows = [];
         switch (choice)
         {
             case AddonsOrAccount.AddOns:
@@ -123,7 +124,8 @@ public partial class MainViewModel : ObservableObject
             default:
                 break;
         }
-        AddonsOrAccountFolderDataRows = dataRows;
+        dataRows.Sort((a, b) => string.Compare(a.StorageItem.Name, b.StorageItem.Name, StringComparison.CurrentCultureIgnoreCase));
+        AddonsOrAccountFolderDataRows = new ObservableCollection<AddonsOrAccountFolderDataRow>(dataRows);
         SelectAllAddonsOrAccountRows = false;
     }
 
@@ -164,6 +166,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _selectAllAddonsOrAccountRows;
 
+    [ObservableProperty]
+    private bool _anyIsLoading;
+
     #endregion
 
     #region Commands
@@ -185,32 +190,6 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private static async Task DropboxListFolder(string path)
-    {
-        await App.DropboxApi.ListFolder(path);
-    }
-
-    [RelayCommand]
-    private static async Task DropboxCheckUser()
-    {
-        await App.DropboxApi.CheckUser();
-    }
-
-    [RelayCommand]
-    private static async Task DropboxCreateFolder(string path)
-    {
-        await App.DropboxApi.CreateFolder(path);
-    }
-
-    [RelayCommand]
-    private static async Task<Dropbox.Responses.FileMetadata?> DropboxGetMetadata(string path)
-    {
-        var metadata = await App.DropboxApi.GetMetadata(path);
-        Console.WriteLine($"hash for {path} = {metadata?.ContentHash}");
-        return metadata;
-    }
-
-    [RelayCommand]
     private async Task PickWowDir()
     {
         var storage = MainWindow?.StorageProvider;
@@ -224,11 +203,45 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task UploadFolder()
+    private async Task UploadSelected()
     {
-        await App.DropboxApi.UploadFolder(
-            $"{WowInstallDir.Value}{InstalledGameVersions[SelectedGameVersionIndex].StringValue()}/Interface/AddOns/OmniCC_Config",
-            $"{Enum.GetName(InstalledGameVersions[SelectedGameVersionIndex])}/Addons");
+        var selected = AddonsOrAccountFolderDataRows.ToList().FindAll(r => r.IsSelected);
+        for (var i = 0; i < AddonsOrAccountFolderDataRows.Count; i++)
+        {
+            var folder = AddonsOrAccountFolderDataRows[i];
+            if (!folder.IsSelected) continue;
+            folder.IsLoading = true;
+            AddonsOrAccountFolderDataRows[i] = folder;
+            AnyIsLoading = true;
+            await App.DropboxApi.UploadFolderZipped(
+                    $"{folder.StorageItem.TryGetLocalPath()}",
+                    $"{Enum.GetName(InstalledGameVersions[SelectedGameVersionIndex])}/{AddonsOrAccountChoices[SelectedAddonsOrAccountChoicesIndex]}"
+                );
+            folder.IsLoading = false;
+            AddonsOrAccountFolderDataRows[i] = folder;
+        }
+        AnyIsLoading = false;
+    }
+
+    [RelayCommand]
+    private async Task DownloadSelected()
+    {
+        var selected = AddonsOrAccountFolderDataRows.ToList().FindAll(r => r.IsSelected);
+        for (var i = 0; i < AddonsOrAccountFolderDataRows.Count; i++)
+        {
+            var folder = AddonsOrAccountFolderDataRows[i];
+            if (!folder.IsSelected) continue;
+            folder.IsLoading = true;
+            AddonsOrAccountFolderDataRows[i] = folder;
+            AnyIsLoading = true;
+            await App.DropboxApi.DownloadFolderZipped(
+                    $"{folder.StorageItem.TryGetLocalPath()}",
+                    $"{Enum.GetName(InstalledGameVersions[SelectedGameVersionIndex])}/{AddonsOrAccountChoices[SelectedAddonsOrAccountChoicesIndex]}"
+                );
+            folder.IsLoading = false;
+            AddonsOrAccountFolderDataRows[i] = folder;
+        }
+        AnyIsLoading = false;
     }
     #endregion
 }

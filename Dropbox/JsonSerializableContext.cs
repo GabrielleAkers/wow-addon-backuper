@@ -16,6 +16,7 @@ namespace Dropbox;
 [JsonSerializable(typeof(Requests.UploadSessionStartBatch))]
 [JsonSerializable(typeof(Requests.UploadSessionAppendBatch))]
 [JsonSerializable(typeof(Requests.UploadSessionFinishBatch))]
+[JsonSerializable(typeof(Requests.Download))]
 internal partial class DropboxRequestJsonContext : JsonSerializerContext
 {
 }

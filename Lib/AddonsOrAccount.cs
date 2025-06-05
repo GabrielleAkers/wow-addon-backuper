@@ -12,4 +12,5 @@ public enum AddonsOrAccount
 public record class AddonsOrAccountFolderDataRow(IStorageItem StorageItem)
 {
     public required bool IsSelected { get; set; }
+    public bool IsLoading { get; set; } = false;
 }
