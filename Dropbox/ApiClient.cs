@@ -8,11 +8,13 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.Mime;
 using System.Threading.Tasks;
+using wow_addon_backuper;
 
 namespace Dropbox;
 
 public class ApiClient(BearerToken token)
 {
+    private WrappedConsole _logger = WrappedConsole.Instance();
     private readonly static string _api_base_url = "https://api.dropboxapi.com/2";
     private readonly static string _content_base_url = "https://content.dropboxapi.com/2";
     private readonly BearerToken _token = token;
@@ -43,7 +45,7 @@ public class ApiClient(BearerToken token)
             MediaTypeNames.Application.Json);
         var res = await Http.client.SendAsync(req);
         res.EnsureSuccessStatusCode();
-        Console.WriteLine("User is good :)");
+        _logger.WriteLine("User is good :)");
     }
 
     public async Task<Responses.UserAccountInfo?> GetAccount()
@@ -265,7 +267,7 @@ public class ApiClient(BearerToken token)
         if (delay != null)
             await Task.Delay((int)delay);
 
-        Console.WriteLine($"Finishing batch");
+        _logger.WriteLine($"Finishing batch");
         var req = await MakePost(
             $"{_api_base_url}/files/upload_session/finish_batch_v2",
             true,
@@ -317,23 +319,39 @@ public class ApiClient(BearerToken token)
 
     public async Task<Responses.FileMetadata?> UploadFolderZipped(string folderPath, string savePath)
     {
-        var baseDir = new DirectoryInfo(folderPath);
-        var dirName = baseDir.Name;
-        using (MemoryStream zip = new())
+        try
         {
-            ZipFile.CreateFromDirectory(baseDir.FullName, zip);
-            var fullSavePath = $"/{savePath}/{dirName}.zip";
-            Console.WriteLine($"Uploading:  Size  {zip.Length / (1024 * 1024)} MB \n        {folderPath} \n     -> {fullSavePath}");
-            return await Upload(zip.ToArray(), fullSavePath);
+            var baseDir = new DirectoryInfo(folderPath);
+            var dirName = baseDir.Name;
+            using (MemoryStream zip = new())
+            {
+                ZipFile.CreateFromDirectory(baseDir.FullName, zip);
+                var fullSavePath = $"/{savePath}/{dirName}.zip";
+                _logger.WriteLine($"Uploading:  Size  {zip.Length} Bytes \n        {folderPath} \n     -> {fullSavePath}");
+                return await Upload(zip.ToArray(), fullSavePath);
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.WriteLine(e);
+            return null;
         }
     }
 
     public async Task DownloadFolderZipped(string saveTo, string dropboxFolder)
     {
-        var saveDir = new DirectoryInfo(saveTo);
-        var dirName = saveDir.Name;
-        var fullDropboxPath = $"/{dropboxFolder}/{dirName}.zip";
-        var stream = await Download(fullDropboxPath);
-        ZipFile.ExtractToDirectory(stream, saveTo, true);
+        try
+        {
+            var saveDir = new DirectoryInfo(saveTo);
+            var dirName = saveDir.Name;
+            var fullDropboxPath = $"/{dropboxFolder}/{dirName}.zip";
+            var zip = await Download(fullDropboxPath);
+            ZipFile.ExtractToDirectory(zip, saveTo, true);
+            _logger.WriteLine($"Download:  Size  {zip.Length} Bytes \n        {dropboxFolder} \n     -> {fullDropboxPath}");
+        }
+        catch (Exception e)
+        {
+            _logger.WriteLine(e.Message);
+        }
     }
 }

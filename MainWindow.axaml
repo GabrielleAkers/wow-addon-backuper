@@ -255,18 +255,90 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center">
-                        <Button
-                            HorizontalAlignment="Stretch"
-                            Command="{Binding UploadSelectedCommand}"
-                            Content="Upload to DropBox"
-                            ToolTip.Tip="This will overwrite what's on DropBox 🗿" />
-                        <Button
-                            HorizontalAlignment="Stretch"
-                            Command="{Binding DownloadSelectedCommand}"
-                            Content="Download from DropBox"
-                            ToolTip.Tip="This will overwrite local files 🗿" />
-                    </StackPanel>
+                    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="3*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Border
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Margin="10,20,10,0"
+                            Padding="10"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Stretch"
+                            Background="#cdb4db"
+                            BoxShadow="inset 0 0 5 0 Black"
+                            CornerRadius="20">
+                            <Grid>
+                                <ListBox
+                                    Grid.Column="0"
+                                    Padding="0,0,10,10"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    AutoScrollToSelectedItem="True"
+                                    Background="Transparent"
+                                    Foreground="Black"
+                                    ItemsSource="{Binding LogMessages}"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                    SelectedIndex="{Binding SelectedLogMessage}" />
+                            </Grid>
+                        </Border>
+                        <Border
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="0,20,0,20">
+                            <StackPanel
+                                HorizontalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="5">
+                                <Border BoxShadow="0 0 5 0 Black" CornerRadius="20">
+                                    <Button
+                                        Width="80"
+                                        Height="80"
+                                        Margin="-1"
+                                        HorizontalAlignment="Stretch"
+                                        Background="Black"
+                                        Command="{Binding DownloadSelectedCommand}"
+                                        CornerRadius="20"
+                                        ToolTip.Tip="Download">
+                                        <Image>
+                                            <DrawingImage>
+                                                <DrawingGroup>
+                                                    <GeometryDrawing Brush="Transparent" Geometry="F1M0,0L512,0L512,512L0,512z" />
+                                                    <GeometryDrawing Brush="LimeGreen" Geometry="F1 M288 32C288 14.3 273.7 0 256 0C238.3 0 224 14.3 224 32L224 274.7L150.6 201.3C138.1 188.8 117.8 188.8 105.3 201.3C92.8 213.8 92.8 234.1 105.3 246.6L233.3 374.6C245.8 387.1 266.1 387.1 278.6 374.6L406.6 246.6C419.1 234.1 419.1 213.8 406.6 201.3C394.1 188.8 373.8 188.8 361.3 201.3L288 274.7L288 32ZM64 352C28.7 352 0 380.7 0 416L0 448C0 483.3 28.7 512 64 512L448 512C483.3 512 512 483.3 512 448L512 416C512 380.7 483.3 352 448 352L346.5 352L301.2 397.3C276.2 422.3 235.7 422.3 210.7 397.3L165.5 352L64 352ZM432 408Q432.589 408 433.178 408.029Q433.766 408.058 434.352 408.116Q434.939 408.173 435.521 408.26Q436.104 408.346 436.682 408.461Q437.26 408.576 437.831 408.719Q438.403 408.862 438.967 409.033Q439.531 409.204 440.085 409.403Q440.64 409.601 441.184 409.827Q441.729 410.052 442.261 410.304Q442.794 410.556 443.313 410.834Q443.833 411.112 444.338 411.414Q444.844 411.717 445.334 412.045Q445.824 412.372 446.297 412.723Q446.77 413.074 447.225 413.448Q447.681 413.821 448.117 414.217Q448.554 414.613 448.971 415.029Q449.387 415.446 449.783 415.883Q450.178 416.319 450.552 416.775Q450.926 417.23 451.277 417.703Q451.628 418.176 451.955 418.666Q452.283 419.156 452.585 419.661Q452.888 420.167 453.166 420.686Q453.444 421.206 453.696 421.739Q453.948 422.271 454.173 422.816Q454.399 423.36 454.597 423.915Q454.796 424.469 454.967 425.033Q455.138 425.597 455.281 426.168Q455.424 426.74 455.539 427.318Q455.654 427.896 455.74 428.478Q455.827 429.061 455.884 429.648Q455.942 430.234 455.971 430.822Q456 431.411 456 432Q456 432.589 455.971 433.178Q455.942 433.766 455.884 434.352Q455.827 434.939 455.74 435.521Q455.654 436.104 455.539 436.682Q455.424 437.26 455.281 437.831Q455.138 438.403 454.967 438.967Q454.796 439.531 454.597 440.085Q454.399 440.64 454.173 441.184Q453.948 441.729 453.696 442.261Q453.444 442.794 453.166 443.313Q452.888 443.833 452.585 444.338Q452.283 444.844 451.955 445.334Q451.628 445.824 451.277 446.297Q450.926 446.77 450.552 447.225Q450.178 447.681 449.783 448.117Q449.387 448.554 448.971 448.971Q448.554 449.387 448.117 449.783Q447.681 450.178 447.225 450.552Q446.77 450.926 446.297 451.277Q445.823 451.628 445.334 451.955Q444.844 452.283 444.338 452.585Q443.833 452.888 443.313 453.166Q442.794 453.444 442.261 453.696Q441.729 453.948 441.184 454.173Q440.64 454.399 440.085 454.597Q439.531 454.796 438.967 454.967Q438.403 455.138 437.831 455.281Q437.26 455.424 436.682 455.539Q436.104 455.654 435.521 455.74Q434.939 455.827 434.352 455.884Q433.766 455.942 433.178 455.971Q432.589 456 432 456Q431.411 456 430.822 455.971Q430.234 455.942 429.648 455.884Q429.061 455.827 428.478 455.74Q427.896 455.654 427.318 455.539Q426.74 455.424 426.168 455.281Q425.597 455.138 425.033 454.967Q424.469 454.796 423.915 454.597Q423.36 454.399 422.816 454.173Q422.271 453.948 421.739 453.696Q421.206 453.444 420.686 453.166Q420.167 452.888 419.661 452.585Q419.156 452.283 418.666 451.955Q418.176 451.628 417.703 451.277Q417.23 450.926 416.775 450.552Q416.319 450.178 415.883 449.783Q415.446 449.387 415.029 448.971Q414.613 448.554 414.217 448.117Q413.821 447.681 413.448 447.225Q413.074 446.77 412.723 446.297Q412.372 445.823 412.045 445.334Q411.717 444.844 411.414 444.338Q411.112 443.833 410.834 443.313Q410.556 442.794 410.304 442.261Q410.052 441.729 409.827 441.184Q409.601 440.64 409.403 440.085Q409.204 439.531 409.033 438.967Q408.862 438.403 408.719 437.831Q408.576 437.26 408.461 436.682Q408.346 436.104 408.26 435.521Q408.173 434.939 408.116 434.352Q408.058 433.766 408.029 433.178Q408 432.589 408 432Q408 431.411 408.029 430.822Q408.058 430.234 408.116 429.648Q408.173 429.061 408.26 428.478Q408.346 427.896 408.461 427.318Q408.576 426.74 408.719 426.168Q408.862 425.597 409.033 425.033Q409.204 424.469 409.403 423.915Q409.601 423.36 409.827 422.816Q410.052 422.271 410.304 421.739Q410.556 421.206 410.834 420.686Q411.112 420.167 411.414 419.661Q411.717 419.156 412.045 418.666Q412.372 418.176 412.723 417.703Q413.074 417.23 413.448 416.775Q413.821 416.319 414.217 415.883Q414.613 415.446 415.029 415.029Q415.446 414.613 415.883 414.217Q416.319 413.821 416.775 413.448Q417.23 413.074 417.703 412.723Q418.176 412.372 418.666 412.045Q419.156 411.717 419.661 411.414Q420.167 411.112 420.686 410.834Q421.206 410.556 421.739 410.304Q422.271 410.052 422.816 409.827Q423.36 409.601 423.915 409.403Q424.469 409.204 425.033 409.033Q425.597 408.862 426.168 408.719Q426.74 408.576 427.318 408.461Q427.896 408.346 428.478 408.26Q429.061 408.173 429.648 408.116Q430.234 408.058 430.822 408.029Q431.411 408 432 408Z" />
+                                                </DrawingGroup>
+                                            </DrawingImage>
+                                        </Image>
+                                    </Button>
+                                </Border>
+                                <Border BoxShadow="0 0 5 0 Black" CornerRadius="20">
+                                    <Button
+                                        Width="80"
+                                        Height="80"
+                                        Margin="-1"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Center"
+                                        Background="Black"
+                                        Command="{Binding UploadSelectedCommand}"
+                                        CornerRadius="20"
+                                        ToolTip.Tip="Upload">
+                                        <Image>
+                                            <DrawingImage>
+                                                <DrawingGroup>
+                                                    <GeometryDrawing Brush="Transparent" Geometry="F1M0,0L512,0L512,512L0,512z" />
+                                                    <GeometryDrawing Brush="#219ebc" Geometry="F1 M288 109.3L288 352C288 369.7 273.7 384 256 384C238.3 384 224 369.7 224 352L224 109.3L150.6 182.7C138.1 195.2 117.8 195.2 105.3 182.7C92.8 170.2 92.8 149.9 105.3 137.4L233.3 9.40001C245.8 -3.09999 266.1 -3.09999 278.6 9.40001L406.6 137.4C419.1 149.9 419.1 170.2 406.6 182.7C394.1 195.2 373.8 195.2 361.3 182.7L288 109.3ZM64 352L192 352C192 387.3 220.7 416 256 416C291.3 416 320 387.3 320 352L448 352C483.3 352 512 380.7 512 416L512 448C512 483.3 483.3 512 448 512L64 512C28.7 512 0 483.3 0 448L0 416C0 380.7 28.7 352 64 352ZM432 456Q432.589 456 433.178 455.971Q433.766 455.942 434.352 455.884Q434.939 455.827 435.521 455.74Q436.104 455.654 436.682 455.539Q437.26 455.424 437.831 455.281Q438.403 455.138 438.967 454.967Q439.531 454.796 440.085 454.597Q440.64 454.399 441.184 454.173Q441.729 453.948 442.261 453.696Q442.794 453.444 443.313 453.166Q443.833 452.888 444.338 452.585Q444.844 452.283 445.334 451.955Q445.824 451.628 446.297 451.277Q446.77 450.926 447.225 450.552Q447.681 450.178 448.117 449.783Q448.554 449.387 448.971 448.971Q449.387 448.554 449.783 448.117Q450.178 447.681 450.552 447.225Q450.926 446.77 451.277 446.297Q451.628 445.823 451.955 445.334Q452.283 444.844 452.585 444.338Q452.888 443.833 453.166 443.313Q453.444 442.794 453.696 442.261Q453.948 441.729 454.173 441.184Q454.399 440.64 454.597 440.085Q454.796 439.531 454.967 438.967Q455.138 438.403 455.281 437.831Q455.424 437.26 455.539 436.682Q455.654 436.104 455.74 435.521Q455.827 434.939 455.884 434.352Q455.942 433.766 455.971 433.178Q456 432.589 456 432Q456 431.411 455.971 430.822Q455.942 430.234 455.884 429.648Q455.827 429.061 455.74 428.478Q455.654 427.896 455.539 427.318Q455.424 426.74 455.281 426.168Q455.138 425.597 454.967 425.033Q454.796 424.469 454.597 423.915Q454.399 423.36 454.173 422.816Q453.948 422.271 453.696 421.739Q453.444 421.206 453.166 420.686Q452.888 420.167 452.585 419.661Q452.283 419.156 451.955 418.666Q451.628 418.176 451.277 417.703Q450.926 417.23 450.552 416.775Q450.178 416.319 449.783 415.883Q449.387 415.446 448.971 415.029Q448.554 414.613 448.117 414.217Q447.681 413.821 447.225 413.448Q446.77 413.074 446.297 412.723Q445.823 412.372 445.334 412.045Q444.844 411.717 444.338 411.414Q443.833 411.112 443.313 410.834Q442.794 410.556 442.261 410.304Q441.729 410.052 441.184 409.827Q440.64 409.601 440.085 409.403Q439.531 409.204 438.967 409.033Q438.403 408.862 437.831 408.719Q437.26 408.576 436.682 408.461Q436.104 408.346 435.521 408.26Q434.939 408.173 434.352 408.116Q433.766 408.058 433.178 408.029Q432.589 408 432 408Q431.411 408 430.822 408.029Q430.234 408.058 429.648 408.116Q429.061 408.173 428.478 408.26Q427.896 408.346 427.318 408.461Q426.74 408.576 426.168 408.719Q425.597 408.862 425.033 409.033Q424.469 409.204 423.915 409.403Q423.36 409.601 422.816 409.827Q422.271 410.052 421.739 410.304Q421.206 410.556 420.686 410.834Q420.167 411.112 419.661 411.414Q419.156 411.717 418.666 412.045Q418.176 412.372 417.703 412.723Q417.23 413.074 416.775 413.448Q416.319 413.821 415.883 414.217Q415.446 414.613 415.029 415.029Q414.613 415.446 414.217 415.883Q413.821 416.319 413.448 416.775Q413.074 417.23 412.723 417.703Q412.372 418.176 412.045 418.666Q411.717 419.156 411.414 419.661Q411.112 420.167 410.834 420.686Q410.556 421.206 410.304 421.739Q410.052 422.271 409.827 422.816Q409.601 423.36 409.403 423.915Q409.204 424.469 409.033 425.033Q408.862 425.597 408.719 426.168Q408.576 426.74 408.461 427.318Q408.346 427.896 408.26 428.478Q408.173 429.061 408.116 429.648Q408.058 430.234 408.029 430.822Q408 431.411 408 432Q408 432.589 408.029 433.178Q408.058 433.766 408.116 434.352Q408.173 434.939 408.26 435.521Q408.346 436.104 408.461 436.682Q408.576 437.26 408.719 437.831Q408.862 438.403 409.033 438.967Q409.204 439.531 409.403 440.085Q409.601 440.64 409.827 441.184Q410.052 441.729 410.304 442.261Q410.556 442.794 410.834 443.313Q411.112 443.833 411.414 444.338Q411.717 444.844 412.045 445.334Q412.372 445.824 412.723 446.297Q413.074 446.77 413.448 447.225Q413.821 447.681 414.217 448.117Q414.613 448.554 415.029 448.971Q415.446 449.387 415.883 449.783Q416.319 450.178 416.775 450.552Q417.23 450.926 417.703 451.277Q418.176 451.628 418.666 451.955Q419.156 452.283 419.661 452.585Q420.167 452.888 420.686 453.166Q421.206 453.444 421.739 453.696Q422.271 453.948 422.816 454.173Q423.36 454.399 423.915 454.597Q424.469 454.796 425.033 454.967Q425.597 455.138 426.168 455.281Q426.74 455.424 427.318 455.539Q427.896 455.654 428.478 455.74Q429.061 455.827 429.648 455.884Q430.234 455.942 430.822 455.971Q431.411 456 432 456Z" />
+                                                </DrawingGroup>
+                                            </DrawingImage>
+                                        </Image>
+                                    </Button>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </DockPanel>
             </Border>
 
@@ -308,17 +380,20 @@
                                 <CheckBox
                                     Grid.Column="0"
                                     Width="32"
-                                    Margin="20,0,0,0"
+                                    Margin="18,0,0,0"
                                     IsChecked="{Binding SelectAllAddonsOrAccountRows}">
                                     <CheckBox.Styles>
                                         <Style Selector="CheckBox:checked:pointerover /template/ Path#CheckGlyph">
                                             <Setter Property="Fill" Value="Black" />
                                         </Style>
+                                        <Style Selector="CheckBox:unchecked /template/ Border#NormalRectangle">
+                                            <Setter Property="BorderBrush" Value="Black" />
+                                        </Style>
                                     </CheckBox.Styles>
                                 </CheckBox>
                                 <TextBlock
                                     Grid.Column="1"
-                                    Margin="0,0,12,0"
+                                    Margin="0"
                                     VerticalAlignment="Center"
                                     Foreground="Black"
                                     Text="Name"
@@ -335,60 +410,78 @@
                                 </Border>
                             </Grid>
                         </Border>
-
-                        <Border ClipToBounds="True" CornerRadius="0 0 12 12">
-                            <ScrollViewer VerticalScrollBarVisibility="Visible">
-                                <ItemsControl ItemsSource="{Binding AddonsOrAccountFolderDataRows}">
-                                    <ItemsControl.Styles>
-                                        <Style Selector="ContentPresenter">
-                                            <Setter Property="Background" Value="#415a77" />
-                                        </Style>
-                                        <Style Selector="ContentPresenter:nth-child(2n)">
+                        <Border
+                            Padding="4"
+                            Background="#778da9"
+                            BoxShadow="inset 0 0 5 0 Black"
+                            CornerRadius="0 0 12 12">
+                            <Grid>
+                                <ListBox
+                                    Name="MainContentListBox"
+                                    Background="Transparent"
+                                    CornerRadius="0 0 12 12"
+                                    ItemsSource="{Binding AddonsOrAccountFolderDataRows}">
+                                    <ListBox.Styles>
+                                        <Style Selector="ListBox ListBoxItem">
+                                            <Setter Property="Padding" Value="0" />
                                             <Setter Property="Background" Value="#778da9" />
                                         </Style>
-                                    </ItemsControl.Styles>
-                                    <ItemsControl.ItemTemplate>
+                                    </ListBox.Styles>
+                                    <ListBox.Resources>
+                                        <SolidColorBrush x:Key="SystemControlHighlightListLowBrush" />
+                                        <SolidColorBrush x:Key="SystemControlHighlightListAccentLowBrush" />
+                                        <SolidColorBrush x:Key="SystemControlHighlightListAccentMediumBrush" />
+                                        <SolidColorBrush x:Key="SystemControlHighlightListAccentHighBrush" />
+                                        <SolidColorBrush x:Key="SystemControlHighlightListMediumBrush" />
+                                    </ListBox.Resources>
+                                    <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid RowDefinitions="auto, auto">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition SharedSizeGroup="A" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="32" />
-                                                </Grid.ColumnDefinitions>
-
-                                                <CheckBox
-                                                    Grid.Column="0"
-                                                    Width="32"
-                                                    Margin="12,0,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    IsChecked="{Binding IsSelected}">
-                                                    <CheckBox.Styles>
-                                                        <Style Selector="CheckBox:checked:pointerover /template/ Path#CheckGlyph">
-                                                            <Setter Property="Fill" Value="Black" />
-                                                        </Style>
-                                                    </CheckBox.Styles>
-                                                </CheckBox>
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    VerticalAlignment="Center"
-                                                    Text="{Binding StorageItem.Name}"
-                                                    TextAlignment="Center" />
-                                                <Border
-                                                    Grid.Column="2"
-                                                    Width="32"
-                                                    Margin="0,0,12,0">
-                                                    <PathIcon
-                                                        Classes="spin"
-                                                        Data="{StaticResource spinner}"
-                                                        Foreground="#ffafcc"
-                                                        IsVisible="{Binding IsLoading}" />
-                                                </Border>
-                                            </Grid>
+                                            <Border
+                                                Padding="0,4,0,4"
+                                                BorderBrush="#ffffafcc"
+                                                BorderThickness="0,1,0,1">
+                                                <Grid RowDefinitions="auto, auto">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition SharedSizeGroup="A" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="32" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <CheckBox
+                                                        Grid.Column="0"
+                                                        Width="32"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        IsChecked="{Binding IsSelected}">
+                                                        <CheckBox.Styles>
+                                                            <Style Selector="CheckBox:checked:pointerover /template/ Path#CheckGlyph">
+                                                                <Setter Property="Fill" Value="Black" />
+                                                            </Style>
+                                                            <Style Selector="CheckBox:unchecked /template/ Border#NormalRectangle">
+                                                                <Setter Property="BorderBrush" Value="Black" />
+                                                            </Style>
+                                                        </CheckBox.Styles>
+                                                    </CheckBox>
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        VerticalAlignment="Center"
+                                                        Text="{Binding StorageItem.Name}"
+                                                        TextAlignment="Center" />
+                                                    <Border
+                                                        Grid.Column="2"
+                                                        Width="32"
+                                                        Margin="0,0,12,0">
+                                                        <PathIcon
+                                                            Classes="spin"
+                                                            Data="{StaticResource spinner}"
+                                                            Foreground="#ffafcc"
+                                                            IsVisible="{Binding IsLoading}" />
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
                                         </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
                         </Border>
                     </DockPanel>
                 </DockPanel>

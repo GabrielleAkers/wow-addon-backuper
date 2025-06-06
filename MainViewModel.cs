@@ -16,10 +16,12 @@ namespace wow_addon_backuper;
 
 public partial class MainViewModel : ObservableObject
 {
+    private readonly WrappedConsole _logger = WrappedConsole.Instance();
     public Window? MainWindow;
 
     public MainViewModel(Dropbox.BearerToken token)
     {
+        _logger.Changed += UpdateLogOutput;
         _dropboxToken = token;
 
         // special handling for nested property change in SyncedSetting
@@ -33,6 +35,15 @@ public partial class MainViewModel : ObservableObject
     {
         // hack to update view on initial load, called after Window is constructed by app
         HandleWowInstallDirChanged(WowInstallDir, new PropertyChangedEventArgs(nameof(WowInstallDir)));
+    }
+
+    private void UpdateLogOutput(object sender, string? value)
+    {
+        if (value != null)
+        {
+            LogMessages.Add(value);
+            SelectedLogMessage = LogMessages.Count - 1;
+        }
     }
 
     private async void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -70,15 +81,15 @@ public partial class MainViewModel : ObservableObject
         {
             var install_dir = (sender as SyncedSetting<string>)!.Value;
             if (install_dir == null) return;
-            Console.WriteLine($"Checking {install_dir} for game versions");
+            _logger.WriteLine($"Checking {install_dir} for game versions");
             var wow_vers = Enum.GetValues<WowVersions>();
             for (var i = 0; i < wow_vers.Length; i++)
             {
                 var dir = $"{install_dir}{wow_vers[i].StringValue()}";
-                Console.WriteLine($"Checking {dir}");
+                _logger.WriteLine($"Checking {dir}");
                 if (Directory.Exists(dir))
                 {
-                    Console.WriteLine($"Found version {wow_vers[i]}");
+                    _logger.WriteLine($"Found version {wow_vers[i]}");
                     if (!InstalledGameVersions.Contains(wow_vers[i]))
                         InstalledGameVersions.Add(wow_vers[i]);
                 }
@@ -169,36 +180,66 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _anyIsLoading;
 
+    [ObservableProperty]
+    private ObservableCollection<string> _logMessages = [];
+
+    [ObservableProperty]
+    private int _selectedLogMessage;
+
     #endregion
 
     #region Commands
 
     [RelayCommand]
-    private static async Task DropboxSignin()
+    private async Task DropboxSignin()
     {
-        await Dropbox.OAuthHandler.Instance().SignIn(App.AppState.DropboxToken);
-        App.AppState.UserAccountInfo = await App.DropboxApi.GetAccount();
+        try
+        {
+            await Dropbox.OAuthHandler.Instance().SignIn(App.AppState.DropboxToken);
+            App.AppState.UserAccountInfo = await App.DropboxApi.GetAccount();
+        }
+        catch (Exception e)
+        {
+            _logger.WriteLine(e.Message);
+        }
     }
 
     [RelayCommand]
-    private static async Task DropboxSignout()
+    private async Task DropboxSignout()
     {
-        await App.DropboxApi.RevokeToken();
-        Dropbox.OAuthHandler.Instance().SignOut();
-        App.AppState.DropboxToken.Clear();
-        App.AppState.UserAccountInfo = null;
+        try
+        {
+            await App.DropboxApi.RevokeToken();
+        }
+        catch (Exception e)
+        {
+            _logger.WriteLine(e.Message);
+        }
+        finally
+        {
+            Dropbox.OAuthHandler.Instance().SignOut();
+            App.AppState.DropboxToken.Clear();
+            App.AppState.UserAccountInfo = null;
+        }
     }
 
     [RelayCommand]
     private async Task PickWowDir()
     {
-        var storage = MainWindow?.StorageProvider;
-        if (storage != null && storage.CanPickFolder)
+        try
         {
-            var picked_folder = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions { AllowMultiple = false, Title = "Pick WoW install directory" });
-            if (picked_folder == null) return;
-            if (picked_folder.Count <= 0) return;
-            WowInstallDir.Value = $"{picked_folder[0].Path.AbsolutePath.Replace("%20", " ")}";
+            var storage = MainWindow?.StorageProvider;
+            if (storage != null && storage.CanPickFolder)
+            {
+                var picked_folder = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions { AllowMultiple = false, Title = "Pick WoW install directory" });
+                if (picked_folder == null) return;
+                if (picked_folder.Count <= 0) return;
+                WowInstallDir.Value = $"{picked_folder[0].Path.AbsolutePath.Replace("%20", " ")}";
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.WriteLine(e.Message);
         }
     }
 
@@ -213,10 +254,17 @@ public partial class MainViewModel : ObservableObject
             folder.IsLoading = true;
             AddonsOrAccountFolderDataRows[i] = folder;
             AnyIsLoading = true;
-            await App.DropboxApi.UploadFolderZipped(
-                    $"{folder.StorageItem.TryGetLocalPath()}",
-                    $"{Enum.GetName(InstalledGameVersions[SelectedGameVersionIndex])}/{AddonsOrAccountChoices[SelectedAddonsOrAccountChoicesIndex]}"
-                );
+            try
+            {
+                await App.DropboxApi.UploadFolderZipped(
+                        $"{folder.StorageItem.TryGetLocalPath()}",
+                        $"{Enum.GetName(InstalledGameVersions[SelectedGameVersionIndex])}/{AddonsOrAccountChoices[SelectedAddonsOrAccountChoicesIndex]}"
+                    );
+            }
+            catch (Exception e)
+            {
+                _logger.WriteLine(e.Message);
+            }
             folder.IsLoading = false;
             AddonsOrAccountFolderDataRows[i] = folder;
         }
@@ -234,10 +282,17 @@ public partial class MainViewModel : ObservableObject
             folder.IsLoading = true;
             AddonsOrAccountFolderDataRows[i] = folder;
             AnyIsLoading = true;
-            await App.DropboxApi.DownloadFolderZipped(
-                    $"{folder.StorageItem.TryGetLocalPath()}",
-                    $"{Enum.GetName(InstalledGameVersions[SelectedGameVersionIndex])}/{AddonsOrAccountChoices[SelectedAddonsOrAccountChoicesIndex]}"
-                );
+            try
+            {
+                await App.DropboxApi.DownloadFolderZipped(
+                        $"{folder.StorageItem.TryGetLocalPath()}",
+                        $"{Enum.GetName(InstalledGameVersions[SelectedGameVersionIndex])}/{AddonsOrAccountChoices[SelectedAddonsOrAccountChoicesIndex]}"
+                    );
+            }
+            catch (Exception e)
+            {
+                _logger.WriteLine(e.Message);
+            }
             folder.IsLoading = false;
             AddonsOrAccountFolderDataRows[i] = folder;
         }
