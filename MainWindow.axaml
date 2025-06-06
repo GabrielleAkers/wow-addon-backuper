@@ -427,7 +427,7 @@
                         </Border>
                         <Border
                             Padding="4"
-                            Background="#778da9"
+                            Background="#cdb4db"
                             BoxShadow="inset 0 0 5 0 Black"
                             CornerRadius="0 0 12 12">
                             <Grid>
@@ -439,7 +439,7 @@
                                     <ListBox.Styles>
                                         <Style Selector="ListBox ListBoxItem">
                                             <Setter Property="Padding" Value="0" />
-                                            <Setter Property="Background" Value="#778da9" />
+                                            <Setter Property="Background" Value="Transparent" />
                                         </Style>
                                     </ListBox.Styles>
                                     <ListBox.Resources>
@@ -453,7 +453,7 @@
                                         <DataTemplate>
                                             <Border
                                                 Padding="0,4,0,4"
-                                                BorderBrush="#ffffafcc"
+                                                BorderBrush="#ffc8dd"
                                                 BorderThickness="0,1,0,1">
                                                 <Grid RowDefinitions="auto, auto">
                                                     <Grid.ColumnDefinitions>
@@ -479,6 +479,8 @@
                                                     <TextBlock
                                                         Grid.Column="1"
                                                         VerticalAlignment="Center"
+                                                        Background="Transparent"
+                                                        Foreground="Black"
                                                         Text="{Binding StorageItem.Name}"
                                                         TextAlignment="Center" />
                                                     <Border
