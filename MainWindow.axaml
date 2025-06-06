@@ -218,14 +218,29 @@
                         DockPanel.Dock="Bottom"
                         Orientation="Horizontal"
                         Spacing="0">
-                        <Button
-                            Width="32"
-                            Height="32"
+                        <Border
                             Margin="0,0,-1,0"
-                            Command="{Binding PickWowDirCommand}"
-                            Content="P"
-                            CornerRadius="0 0 0 20"
-                            ToolTip.Tip="Open folder picker" />
+                            BorderBrush="#ff544959"
+                            BorderThickness="0,0,1,0"
+                            ZIndex="5">
+                            <Button
+                                Width="32"
+                                Height="32"
+                                Padding="10,8,8,8"
+                                Background="Black"
+                                Command="{Binding PickWowDirCommand}"
+                                CornerRadius="0 0 0 20"
+                                ToolTip.Tip="Open folder picker">
+                                <Image>
+                                    <DrawingImage>
+                                        <DrawingGroup>
+                                            <GeometryDrawing Brush="Transparent" Geometry="F1M0,0L512,0L512,512L0,512z" />
+                                            <GeometryDrawing Brush="White" Geometry="F1 M64 480L448 480C483.3 480 512 451.3 512 416L512 160C512 124.7 483.3 96 448 96L288 96C277.9 96 268.4 91.3 262.4 83.2L243.2 57.6C231.1 41.5 212.1 32 192 32L64 32C28.7 32 0 60.7 0 96L0 416C0 451.3 28.7 480 64 480Z" />
+                                        </DrawingGroup>
+                                    </DrawingImage>
+                                </Image>
+                            </Button>
+                        </Border>
                         <TextBox
                             Name="WowInstallDirTextbox"
                             Width="168"
