@@ -1,0 +1,104 @@
+name: build and release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+      if: github.event_name != 'push'
+
+    - name: Set tag name
+      id: tag
+      run: |
+        if [[ "${{ github.event_name }}" != "push" ]]; then
+          tag=v$(date +%Y%m%d.%H%M%S)
+        else
+          tag=$(basename "${{ github.ref }}")
+        fi
+        echo "tag=$tag" >> $GITHUB_OUTPUT
+    - name: Create Release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: |
+        tag="${{ steps.tag.outputs.tag }}"
+        gh release create --draft "$tag" --title "$tag"
+
+  build:
+    needs: [release]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v4
+    
+    - name: Set platform linux
+      id: platform
+      run: |
+        platform=${{ matrix.os }}
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          platform=windows
+        else
+          platform=linux
+        fi
+        echo "platform=$platform" >> $GITHUB_OUTPUT
+
+    # Build
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0
+    - name: Build windows
+      if: startsWith(matrix.os, 'windows')
+      run: dotnet publish -r win-x64 -c Release
+    - name: Build linux
+      if: startsWith(matrix.os, 'ubuntu')
+      run: dotnet publish -r linux-x64 -c Release
+    
+    - name: Create archive
+      run: |
+        tar czf wow-addon-backuper-${{ steps.platform.outputs.platform }}.tar.gz
+        if [[ "${{ steps.platform.outputs.platform }}" == "windows" ]]; then
+          tar czf wow-addon-backuper-${{ steps.platform.outputs.platform }}.tar.gz bin/Release/net9.0/win-x64/publish
+        else
+          tar czf wow-addon-backuper-${{ steps.platform.outputs.platform }}.tar.gz bin/Release/net9.0/linux-x64/publish
+        fi
+
+    - name: Upload build artifacts
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: gh release upload "${{ needs.release.outputs.tag }}" "wow-addon-backuper-${{ steps.platform.outputs.platform }}.tar.gz"
+  
+  publish:
+    name: Publish release
+    needs: [release, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release edit "${{ needs.release.outputs.tag }}" --draft=false
+      - uses: eregon/keep-last-n-releases@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          n: 3
+          remove_tags_without_release: true
+
+          
