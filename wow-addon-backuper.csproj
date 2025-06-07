@@ -4,7 +4,6 @@
     <LangVersion>preview</LangVersion>
     <OutputType>WinExe</OutputType>
     <DebugType>embedded</DebugType>
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <PublishSingleFile>true</PublishSingleFile>
@@ -41,6 +40,8 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="SkiaSharp" Version="3.116.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
     <PackageReference Include="System.Reactive.Linq" Version="6.0.1" />

@@ -100,7 +100,7 @@ class WowStorageHandler(IStorageProvider storageProvider, string installDir, Lis
             return t == null ? null : [.. t.Select(s => new FileOrFolderData {
                     Name = s.Name,
                     Path = s.TryGetLocalPath(),
-                    RemotePath = $"{wowVersion}/AddOns/" + s.Name
+                    RemotePath = $"/{wowVersion}/AddOns/{s.Name}.zip"
                 })
             ];
         }
@@ -128,7 +128,7 @@ class WowStorageHandler(IStorageProvider storageProvider, string installDir, Lis
             return t == null ? null : [.. t.Select(s => new FileOrFolderData {
                     Name = s.Name,
                     Path = s.TryGetLocalPath(),
-                    RemotePath = $"{wowVersion}/Account Settings/" + s.Name
+                    RemotePath = $"/{wowVersion}/Account Settings/{s.Name}.zip"
                 })
             ];
         }
