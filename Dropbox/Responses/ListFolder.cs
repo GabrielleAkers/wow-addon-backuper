@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Dropbox.Responses;
 
-public class FolderEntry
+public record class FolderEntry
 {
     [JsonPropertyName("client_modified")]
     public string? client_modified { get; set; }
@@ -24,7 +24,7 @@ public class FolderEntry
     public long Size { get; set; }
 }
 
-public class ListFolder
+public record class ListFolder
 {
     [JsonPropertyName("cursor")]
     public string? Cursor { get; set; }
@@ -34,4 +34,7 @@ public class ListFolder
 
     [JsonPropertyName("has_more")]
     public bool HasMore { get; set; }
+
+    [JsonPropertyName("error_summary")]
+    public string? ErrorSummary { get; set; }
 }

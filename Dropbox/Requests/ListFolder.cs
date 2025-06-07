@@ -16,6 +16,9 @@ record class ListFolder : BaseRequest
     [JsonPropertyName("recursive")]
     public bool Recursive { get; set; } = false;
 
+    [JsonPropertyName("limit")]
+    public int Limit { get; set; } = 2000;
+
     [JsonPropertyName("include_media_info")]
     public bool IncludeMediaInfo { get; set; } = false;
 

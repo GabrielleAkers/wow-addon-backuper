@@ -53,7 +53,7 @@ public partial class MainWindow : Window
         });
     }
 
-    private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    private void StartPointerDrag(object? sender, PointerPressedEventArgs e)
     {
         var control = this.InputHitTest(e.GetPosition(this));
 

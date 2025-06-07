@@ -92,7 +92,7 @@ public class ApiClient(BearerToken token)
     public async Task<Responses.ListFolder?> ListFolderContinue(string cursor)
     {
         var req = await MakePost(
-            $"{_api_base_url}/files/list_folder/co",
+            $"{_api_base_url}/files/list_folder/continue",
             true,
             new Requests.ListFolderContinue { Cursor = cursor }.ToStringContent(DropboxRequestJsonContext.Default.ListFolderContinue),
             MediaTypeNames.Application.Json
@@ -344,10 +344,9 @@ public class ApiClient(BearerToken token)
         {
             var saveDir = new DirectoryInfo(saveTo);
             var dirName = saveDir.Name;
-            var fullDropboxPath = $"/{dropboxFolder}/{dirName}.zip";
-            var zip = await Download(fullDropboxPath);
+            _logger.WriteLine($"Download: \n        {dropboxFolder} \n     -> {saveTo}");
+            var zip = await Download(dropboxFolder);
             ZipFile.ExtractToDirectory(zip, saveTo, true);
-            _logger.WriteLine($"Download:  Size  {zip.Length} Bytes \n        {dropboxFolder} \n     -> {fullDropboxPath}");
         }
         catch (Exception e)
         {

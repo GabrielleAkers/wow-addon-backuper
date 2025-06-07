@@ -5,7 +5,7 @@ namespace Dropbox;
 
 [JsonSerializable(typeof(Requests.CheckUser))]
 [JsonSerializable(typeof(Requests.GetAccount))]
-[JsonSerializable(typeof(Responses.ListFolder))]
+[JsonSerializable(typeof(Requests.ListFolder))]
 [JsonSerializable(typeof(Requests.ListFolderContinue))]
 [JsonSerializable(typeof(Requests.CreateFolder))]
 [JsonSerializable(typeof(Requests.GetMetadata))]

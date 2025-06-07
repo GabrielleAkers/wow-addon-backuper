@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -51,6 +49,9 @@ public partial class MainViewModel : ObservableObject
         switch (e.PropertyName)
         {
             case nameof(SelectedGameVersionIndex):
+                await HandleSelectedGameVersionIndexChanged();
+                break;
+            case nameof(ShowDropboxItems):
                 await HandleSelectedGameVersionIndexChanged();
                 break;
             case nameof(SelectedAddonsOrAccountChoicesIndex):
@@ -103,13 +104,23 @@ public partial class MainViewModel : ObservableObject
         var storage = MainWindow?.StorageProvider;
         if (storage == null || WowInstallDir.Value == null) return;
 
-        var wow_storage = new WowStorageHandler(storage, WowInstallDir.Value, InstalledGameVersions);
-        var addons = await wow_storage.GetAddons(InstalledGameVersions[SelectedGameVersionIndex]);
-        var wtf = await wow_storage.GetWTF(InstalledGameVersions[SelectedGameVersionIndex]);
+        var wowStorage = new WowStorageHandler(storage, WowInstallDir.Value, InstalledGameVersions);
 
+        List<FileOrFolderData>? addons;
+        List<FileOrFolderData>? accounts;
+
+        if (ShowDropboxItems)
+        {
+            addons = await wowStorage.GetAddons(InstalledGameVersions[SelectedGameVersionIndex], true);
+            accounts = await wowStorage.GetWTF(InstalledGameVersions[SelectedGameVersionIndex], true);
+        }
+        else
+        {
+            addons = await wowStorage.GetAddons(InstalledGameVersions[SelectedGameVersionIndex]);
+            accounts = await wowStorage.GetWTF(InstalledGameVersions[SelectedGameVersionIndex]);
+        }
         SelectedGameVersionAddons = addons ?? [];
-        SelectedGameVersionWTF = wtf ?? [];
-
+        SelectedGameVersionWTF = accounts ?? [];
         OnPropertyChanged(nameof(SelectedAddonsOrAccountChoicesIndex));
         SelectAllAddonsOrAccountRows = false;
     }
@@ -123,19 +134,23 @@ public partial class MainViewModel : ObservableObject
             case AddonsOrAccount.AddOns:
                 SelectedGameVersionAddons.ForEach(s =>
                 {
-                    dataRows.Add(new AddonsOrAccountFolderDataRow(s) { IsSelected = false });
+                    var p = s.Path;
+                    if (p == null) return;
+                    dataRows.Add(new AddonsOrAccountFolderDataRow { IsSelected = false, Path = p, Name = s.Name, RemotePath = s.RemotePath });
                 });
                 break;
             case AddonsOrAccount.Account:
                 SelectedGameVersionWTF.ForEach(s =>
                 {
-                    dataRows.Add(new AddonsOrAccountFolderDataRow(s) { IsSelected = false });
+                    var p = s.Path;
+                    if (p == null) return;
+                    dataRows.Add(new AddonsOrAccountFolderDataRow { IsSelected = false, Path = p, Name = s.Name, RemotePath = s.RemotePath });
                 });
                 break;
             default:
                 break;
         }
-        dataRows.Sort((a, b) => string.Compare(a.StorageItem.Name, b.StorageItem.Name, StringComparison.CurrentCultureIgnoreCase));
+        dataRows.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.CurrentCultureIgnoreCase));
         AddonsOrAccountFolderDataRows = new ObservableCollection<AddonsOrAccountFolderDataRow>(dataRows);
         SelectAllAddonsOrAccountRows = false;
     }
@@ -160,10 +175,10 @@ public partial class MainViewModel : ObservableObject
     private int _selectedGameVersionIndex = 0;
 
     [ObservableProperty]
-    private List<IStorageItem> _selectedGameVersionAddons = [];
+    private List<FileOrFolderData> _selectedGameVersionAddons = [];
 
     [ObservableProperty]
-    private List<IStorageItem> _selectedGameVersionWTF = [];
+    private List<FileOrFolderData> _selectedGameVersionWTF = [];
 
     [ObservableProperty]
     private List<string> _addonsOrAccountChoices = [.. Enum.GetValues<AddonsOrAccount>().Select(e => e.StringValue())];
@@ -185,6 +200,9 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private int _selectedLogMessage;
+
+    [ObservableProperty]
+    private bool _showDropboxItems;
 
     #endregion
 
@@ -257,7 +275,7 @@ public partial class MainViewModel : ObservableObject
             try
             {
                 await App.DropboxApi.UploadFolderZipped(
-                        $"{folder.StorageItem.TryGetLocalPath()}",
+                        $"{folder.Path}",
                         $"{Enum.GetName(InstalledGameVersions[SelectedGameVersionIndex])}/{AddonsOrAccountChoices[SelectedAddonsOrAccountChoicesIndex]}"
                     );
             }
@@ -285,8 +303,8 @@ public partial class MainViewModel : ObservableObject
             try
             {
                 await App.DropboxApi.DownloadFolderZipped(
-                        $"{folder.StorageItem.TryGetLocalPath()}",
-                        $"{Enum.GetName(InstalledGameVersions[SelectedGameVersionIndex])}/{AddonsOrAccountChoices[SelectedAddonsOrAccountChoicesIndex]}"
+                        $"{folder.Path}",
+                        $"{folder.RemotePath}"
                     );
             }
             catch (Exception e)

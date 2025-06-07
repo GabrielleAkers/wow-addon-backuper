@@ -9,7 +9,7 @@ public enum AddonsOrAccount
     Account
 }
 
-public record class AddonsOrAccountFolderDataRow(IStorageItem StorageItem)
+public record class AddonsOrAccountFolderDataRow : FileOrFolderData
 {
     public required bool IsSelected { get; set; }
     public bool IsLoading { get; set; } = false;
