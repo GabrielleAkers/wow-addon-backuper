@@ -45,17 +45,6 @@ jobs:
     steps:
     - name: Clone repository
       uses: actions/checkout@v4
-    
-    - name: Set platform linux
-      id: platform
-      run: |
-        platform=${{ matrix.os }}
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          platform=windows
-        else
-          platform=linux
-        fi
-        echo "platform=$platform" >> $GITHUB_OUTPUT
 
     # Build
     - name: Setup .NET
@@ -69,20 +58,27 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: dotnet publish -r linux-x64 -c Release
     
-    - name: Create archive
+    - name: Create archive linux
+      if: startsWith(matrix.os, 'ubuntu')
       run: |
-        tar czf wow-addon-backuper-${{ steps.platform.outputs.platform }}.tar.gz
-        if [[ "${{ steps.platform.outputs.platform }}" == "windows" ]]; then
-          tar czf wow-addon-backuper-${{ steps.platform.outputs.platform }}.tar.gz bin/Release/net9.0/win-x64/publish
-        else
-          tar czf wow-addon-backuper-${{ steps.platform.outputs.platform }}.tar.gz bin/Release/net9.0/linux-x64/publish
-        fi
+        tar czf wow-addon-backuper-linux64.tar.gz bin/Release/net9.0/linux-x64/publish
+    - name: Create archive windows
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        tar czf wow-addon-backuper-windows64.tar.gz bin/Release/net9.0/win-x64/publish
 
-    - name: Upload build artifacts
+    - name: Upload build artifacts linux
+      if: startsWith(matrix.os, 'ubuntu')
       env:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
-      run: gh release upload "${{ needs.release.outputs.tag }}" "wow-addon-backuper-${{ steps.platform.outputs.platform }}.tar.gz"
+      run: gh release upload "${{ needs.release.outputs.tag }}" "wow-addon-backuper-linux64.tar.gz"
+    - name: Upload build artifacts windows
+      if: startsWith(matrix.os, 'windows')
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: gh release upload "${{ needs.release.outputs.tag }}" "wow-addon-backuper-windows64.tar.gz"
   
   publish:
     name: Publish release
