@@ -68,7 +68,7 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       run: |
         mkdir wow-addon-backuper
-        cp bin/Release/net9.0/linux-x64/publish/* wow-addon-backuper
+        cp bin/Release/net9.0/win-x64/publish/* wow-addon-backuper
         tar czf wow-addon-backuper-windows64.tar.gz wow-addon-backuper
 
     - name: Upload build artifacts linux
