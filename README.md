@@ -1,5 +1,7 @@
 # wow-addon-backup
 
+[Click here to download the latest release](https://github.com/GabrielleAkers/wow-addon-backuper/releases/latest)
+
 easily backup your wow addons and settings to DropBox :)
 
 just make a free DropBox account and the app will handle the rest
