@@ -61,11 +61,17 @@ jobs:
     - name: Create archive linux
       if: startsWith(matrix.os, 'ubuntu')
       run: |
-        tar czf wow-addon-backuper-linux64.tar.gz bin/Release/net9.0/linux-x64/publish
+        cd bin/Release/net9.0/linux-x64
+        mkdir wow-addon-backuper
+        cp publish/* wow-addon-backuper
+        tar czf wow-addon-backuper-linux64.tar.gz wow-addon-backuper
     - name: Create archive windows
       if: startsWith(matrix.os, 'windows')
       run: |
-        tar czf wow-addon-backuper-windows64.tar.gz bin/Release/net9.0/win-x64/publish
+        cd bin/Release/net9.0/win-x64
+        mkdir wow-addon-backuper
+        cp publish/* wow-addon-backuper
+        tar czf wow-addon-backuper-windows64.tar.gz wow-addon-backuper
 
     - name: Upload build artifacts linux
       if: startsWith(matrix.os, 'ubuntu')
